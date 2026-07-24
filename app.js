@@ -25,6 +25,7 @@ function updateTimer() {
 function beginRound(type) {
   round = type; document.querySelector('#timer-readout').classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = '7.00초';
   const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 음악 모드' : `ROUND 2 OF 2 · ${soundNames[selectedSound]}`;
+  document.querySelector('#sound-visual').dataset.mode = isSong ? 'music' : 'noise';
   document.querySelector('#play-hint').textContent = isSong ? '노래가 들리는 동안 시간 감각에만 집중해 보세요.' : `${soundNames[selectedSound]}와 함께 같은 방식으로 7초를 맞혀 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now();
   if (isSong) { songAudio.currentTime = 0; songAudio.muted = muted; songAudio.play().catch(() => {}); } else noiseSource = createNoise(selectedSound);
