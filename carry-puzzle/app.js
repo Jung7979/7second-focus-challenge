@@ -21,12 +21,13 @@ function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.
 function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id, { x: null, y: null }])); }
 function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
-  element.style.backgroundColor = piece.color;
+  element.style.backgroundColor = 'transparent';
   element.style.backgroundImage = `url(assets/pieces-shaped/${piece.id}.png)`;
   element.style.backgroundSize = 'contain';
   element.style.backgroundPosition = 'center';
-  element.style.clipPath = piece.clip;
-  element.style.webkitClipPath = piece.clip;
+  element.style.borderColor = 'transparent';
+  element.style.boxShadow = 'none';
+  element.style.filter = 'drop-shadow(0 4px 7px #183c6330)';
 }
 function createPiece(piece) {
   const element = document.createElement('button');
