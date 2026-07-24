@@ -13,6 +13,7 @@ const lifeNoiseEnvelope = [0,0.46,0.97,0.8,0.73,0.65,0.3,0.07,0.02,0,0,0,0,0,0,0
 const whiteNoiseMixGain = Math.pow(10, -5 / 20);
 // Keep the balance between sound types while lowering every playback path by 5 dB.
 const playbackMasterGain = Math.pow(10, -5 / 20);
+const mixedLifeNoiseGain = Math.pow(10, -2 / 20);
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
@@ -112,8 +113,8 @@ function startWaveVisualizer() {
   const draw = () => { const time = waveAudio.currentTime, lifeEnergy = getLifeNoiseEnergy(songAudio.currentTime); renderSpectrum((column, row) => { const longSwell = (Math.sin(time * 1.07 + column * .46 - row * .72) + 1) / 2; const nearFoam = Math.pow((Math.sin(time * 3.1 + column * .9 - row * 1.15) + 1) / 2, 1.7); return .065 + lifeEnergy * (.16 + ((column + row) % 5) * .028) + longSwell * (.12 + (row / spectrumRows) * .10) + nearFoam * .10; }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
-function playLifeNoiseLayer() {
-  songAudio.currentTime = 0; songAudio.muted = muted; songAudio.volume = playbackMasterGain;
+function playLifeNoiseLayer(mixGain = 1) {
+  songAudio.currentTime = 0; songAudio.muted = muted; songAudio.volume = playbackMasterGain * mixGain;
   return songAudio.play().catch(() => { document.querySelector('#play-hint').textContent = '생활소음을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
 }
 function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; spectrumLevels.fill(0); }
@@ -136,11 +137,11 @@ function beginRound(type) {
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     songAudio.play().then(startLifeNoiseVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'rain') {
-    muted = false; rainAudio.currentTime = 0; rainAudio.muted = false; rainAudio.volume = .72 * whiteNoiseMixGain * playbackMasterGain; playLifeNoiseLayer();
+    muted = false; rainAudio.currentTime = 0; rainAudio.muted = false; rainAudio.volume = .72 * whiteNoiseMixGain * playbackMasterGain; playLifeNoiseLayer(mixedLifeNoiseGain);
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     rainAudio.play().then(startRainVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '빗소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'wave') {
-    muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82 * whiteNoiseMixGain * playbackMasterGain; playLifeNoiseLayer();
+    muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82 * whiteNoiseMixGain * playbackMasterGain; playLifeNoiseLayer(mixedLifeNoiseGain);
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     waveAudio.play().then(startWaveVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '파도 소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
