@@ -1,17 +1,18 @@
 const COLS = 6, ROWS = 5, GAME_SECONDS = 30;
+const SPRITE_URL = 'assets/travel-items-sprite.png';
 const pieces = [
-  { id: 'hoodie', name: '후드', icon: '🧥', w: 3, h: 2, color: '#ffb34f' },
-  { id: 'tops', name: '티셔츠', icon: '👕', w: 2, h: 2, color: '#8fc6ff' },
-  { id: 'pants', name: '팬츠', icon: '👖', w: 1, h: 3, color: '#a9a0f5' },
-  { id: 'pouch', name: '세면 파우치', icon: '🧴', w: 2, h: 1, color: '#ffc3a8' },
-  { id: 'tee', name: '반팔', icon: '👚', w: 2, h: 1, color: '#a5dfc1' },
-  { id: 'socks', name: '양말', icon: '🧦', w: 1, h: 1, color: '#ff9fb0' },
-  { id: 'charger', name: '충전기', icon: '🔌', w: 1, h: 1, color: '#d5b692' },
-  { id: 'underwear', name: '속옷', icon: '🩲', w: 1, h: 1, color: '#d7a9e8' },
-  { id: 'passport', name: '여권', icon: '🛂', w: 1, h: 1, color: '#80cbd0' },
-  { id: 'shoes', name: '신발', icon: '👟', w: 2, h: 2, color: '#f1cd88' },
-  { id: 'cap', name: '모자', icon: '🧢', w: 1, h: 2, color: '#d9b5ed' },
-  { id: 'guide', name: '여행 안내서', icon: '🗺️', w: 3, h: 1, color: '#b7d6a8' }
+  { id: 'hoodie', name: '후드', w: 3, h: 2, color: '#ffb34f', sprite: 0 },
+  { id: 'tops', name: '티셔츠', w: 2, h: 2, color: '#8fc6ff', sprite: 1 },
+  { id: 'pants', name: '팬츠', w: 1, h: 3, color: '#a9a0f5', sprite: 2 },
+  { id: 'pouch', name: '세면 파우치', w: 2, h: 1, color: '#ffc3a8', sprite: 3 },
+  { id: 'tee', name: '반팔', w: 2, h: 1, color: '#a5dfc1', sprite: 4 },
+  { id: 'socks', name: '양말', w: 1, h: 1, color: '#ff9fb0', sprite: 5 },
+  { id: 'charger', name: '충전기', w: 1, h: 1, color: '#d5b692', sprite: 6 },
+  { id: 'underwear', name: '속옷', w: 1, h: 1, color: '#d7a9e8', sprite: 7 },
+  { id: 'passport', name: '여권', w: 1, h: 1, color: '#80cbd0', sprite: 8 },
+  { id: 'shoes', name: '신발', w: 2, h: 2, color: '#f1cd88', sprite: 9 },
+  { id: 'cap', name: '모자', w: 1, h: 2, color: '#d9b5ed', sprite: 10 },
+  { id: 'guide', name: '여행 안내서', w: 3, h: 1, color: '#b7d6a8', sprite: 11 }
 ];
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const board = document.querySelector('#board'), tray = document.querySelector('#tray'), timerValue = document.querySelector('#timer-value'), pieceCount = document.querySelector('#piece-count'), hint = document.querySelector('#game-hint');
@@ -20,10 +21,14 @@ let state = {}, dragging = null, timerId = null, startedAt = 0, playing = false;
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
 function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id, { x: null, y: null }])); }
 function isPlaced(piece) { return state[piece.id].x !== null; }
+function applyProductImage(element, piece) {
+  const column = piece.sprite % 4, row = Math.floor(piece.sprite / 4);
+  element.style.backgroundColor = piece.color; element.style.backgroundImage = `url(${SPRITE_URL})`; element.style.backgroundSize = '400% 300%'; element.style.backgroundPosition = `${column * 100 / 3}% ${row * 100 / 2}%`;
+}
 function createPiece(piece) {
   const element = document.createElement('button');
-  element.type = 'button'; element.className = 'piece'; element.dataset.id = piece.id; element.style.background = piece.color;
-  element.innerHTML = `<span class="emoji">${piece.icon}</span><span>${piece.name}</span>`;
+  element.type = 'button'; element.className = 'piece'; element.dataset.id = piece.id; applyProductImage(element, piece);
+  element.innerHTML = `<span class="piece-label">${piece.name}</span>`;
   element.addEventListener('pointerdown', beginDrag); return element;
 }
 function render() {
@@ -54,7 +59,7 @@ function canPlace(piece, x, y) {
 function beginDrag(event) {
   if (!playing) return;
   event.preventDefault(); const id = event.currentTarget.dataset.id, piece = pieces.find(item => item.id === id), previous = { ...state[id] }, preview = document.createElement('div');
-  state[id] = { x: null, y: null }; preview.className = 'drop-preview'; preview.style.background = piece.color; preview.innerHTML = `<span>${piece.icon}</span><span>${piece.name}</span>`; board.append(preview);
+  state[id] = { x: null, y: null }; preview.className = 'drop-preview'; applyProductImage(preview, piece); preview.innerHTML = `<span class="piece-label">${piece.name}</span>`; board.append(preview);
   dragging = { piece, previous, source: event.currentTarget, preview }; dragging.source.style.visibility = 'hidden'; moveDrag(event);
   document.addEventListener('pointermove', moveDrag); document.addEventListener('pointerup', endDrag, { once: true });
 }
