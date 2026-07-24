@@ -7,11 +7,11 @@ const pieces = [
   { id: 'tee', name: '반팔', w: 3, h: 2, cells: [[1,0],[2,0],[0,1],[1,1]], clip: 'polygon(33.333% 0,100% 0,100% 50%,66.667% 50%,66.667% 100%,0 100%,0 50%,33.333% 50%)', color: '#a5dfc1', sprite: 4 },
   { id: 'socks', name: '양말', w: 2, h: 2, cells: [[0,0],[1,0],[0,1]], clip: 'polygon(0 0,100% 0,100% 50%,50% 50%,50% 100%,0 100%)', color: '#ff9fb0', sprite: 5 },
   { id: 'charger', name: '충전기', w: 2, h: 2, cells: [[0,0],[1,0],[0,1],[1,1]], clip: 'none', color: '#d5b692', sprite: 6 },
-  { id: 'underwear', name: '속옷', w: 2, h: 2, cells: [[0,0],[0,1],[1,1]], clip: 'polygon(0 0,50% 0,50% 50%,100% 50%,100% 100%,0 100%)', color: '#d7a9e8', sprite: 7 },
+  { id: 'underwear', name: '속옷', w: 2, h: 2, cells: [[0,0],[1,0],[0,1],[1,1]], clip: 'none', color: '#d7a9e8', sprite: 7 },
   { id: 'passport', name: '여권', w: 3, h: 1, cells: [[0,0],[1,0],[2,0]], clip: 'none', color: '#80cbd0', sprite: 8 },
   { id: 'shoes', name: '신발', w: 3, h: 2, cells: [[0,0],[0,1],[1,1],[2,1]], clip: 'polygon(0 0,33.333% 0,33.333% 50%,100% 50%,100% 100%,0 100%)', color: '#f1cd88', sprite: 9 },
   { id: 'cap', name: '모자', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[1,1]], clip: 'polygon(0 0,100% 0,100% 50%,66.667% 50%,66.667% 100%,33.333% 100%,33.333% 50%,0 50%)', color: '#d9b5ed', sprite: 10 },
-  { id: 'guide', name: '여행 안내서', w: 5, h: 1, cells: [[0,0],[1,0],[2,0],[3,0],[4,0]], clip: 'none', color: '#b7d6a8', sprite: 11 }
+  { id: 'guide', name: '여행 안내서', w: 4, h: 1, cells: [[0,0],[1,0],[2,0],[3,0]], clip: 'none', color: '#b7d6a8', sprite: 11 }
 ];
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const board = document.querySelector('#board'), tray = document.querySelector('#tray'), timerValue = document.querySelector('#timer-value'), pieceCount = document.querySelector('#piece-count'), hint = document.querySelector('#game-hint');
@@ -22,7 +22,7 @@ function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id
 function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
   element.style.backgroundColor = 'transparent';
-  element.style.backgroundImage = `url(assets/pieces-shaped/${piece.id}.png)`;
+  element.style.backgroundImage = `url(${piece.id === 'underwear' ? 'assets/pieces-full/underwear.jpg' : `assets/pieces-shaped/${piece.id}.png`})`;
   element.style.backgroundSize = piece.id === 'pouch' ? '92% 92%' : '100% 100%';
   element.style.backgroundPosition = piece.id === 'pouch' ? 'center 42%' : 'center';
   element.style.backgroundOrigin = 'border-box';
@@ -91,12 +91,14 @@ function beginDrag(event) {
   document.addEventListener('pointermove', moveDrag); document.addEventListener('pointerup', endDrag, { once: true });
 }
 function getDropPoint(event, piece) {
-  const boardRect = board.getBoundingClientRect(), cellWidth = boardRect.width / COLS, cellHeight = boardRect.height / ROWS;
+  const boardRect = board.getBoundingClientRect(), styles = getComputedStyle(board);
+  const gridLeft = boardRect.left + parseFloat(styles.borderLeftWidth), gridTop = boardRect.top + parseFloat(styles.borderTopWidth);
+  const cellWidth = board.clientWidth / COLS, cellHeight = board.clientHeight / ROWS;
   const grab = dragging?.grab ?? { x: 0.5, y: 0.5 };
-  return { x: Math.round((event.clientX - boardRect.left - grab.x * piece.w * cellWidth) / cellWidth), y: Math.round((event.clientY - boardRect.top - grab.y * piece.h * cellHeight) / cellHeight), boardRect, cellWidth, cellHeight };
+  return { x: Math.round((event.clientX - gridLeft - grab.x * piece.w * cellWidth) / cellWidth), y: Math.round((event.clientY - gridTop - grab.y * piece.h * cellHeight) / cellHeight), boardRect, gridLeft, gridTop, cellWidth, cellHeight };
 }
 function moveDrag(event) {
-  if (!dragging) return; const { x, y, boardRect, cellWidth, cellHeight } = getDropPoint(event, dragging.piece), inside = event.clientX >= boardRect.left && event.clientX <= boardRect.right && event.clientY >= boardRect.top && event.clientY <= boardRect.bottom;
+  if (!dragging) return; const { x, y, gridLeft, gridTop, cellWidth, cellHeight } = getDropPoint(event, dragging.piece), inside = event.clientX >= gridLeft && event.clientX <= gridLeft + board.clientWidth && event.clientY >= gridTop && event.clientY <= gridTop + board.clientHeight;
   dragging.preview.hidden = !inside; dragging.preview.classList.toggle('invalid', !canPlace(dragging.piece, x, y));
   dragging.preview.style.width = `${dragging.piece.w * cellWidth}px`; dragging.preview.style.height = `${dragging.piece.h * cellHeight}px`; dragging.preview.style.left = `${Math.max(0, Math.min(COLS - dragging.piece.w, x)) * cellWidth}px`; dragging.preview.style.top = `${Math.max(0, Math.min(ROWS - dragging.piece.h, y)) * cellHeight}px`;
 }
