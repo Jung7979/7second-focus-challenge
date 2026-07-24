@@ -1,5 +1,5 @@
 const COLS = 8, ROWS = 6, GAME_SECONDS = 30;
-const SPRITE_URL = 'assets/travel-items-sprite.png';
+const SPRITE_URL = 'assets/travel-items-tetris-v2.png';
 const pieces = [
   { id: 'hoodie', name: '후드', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]], clip: 'none', color: '#ffb34f', sprite: 0 },
   { id: 'tops', name: '티셔츠', w: 2, h: 3, cells: [[0,0],[0,1],[0,2],[1,2]], clip: 'polygon(0 0,50% 0,50% 66.667%,100% 66.667%,100% 100%,0 100%)', color: '#8fc6ff', sprite: 1 },
@@ -23,7 +23,7 @@ function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id
 function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
   const column = piece.sprite % 4, row = Math.floor(piece.sprite / 4);
-  element.style.backgroundColor = piece.color; element.style.backgroundImage = `url(${SPRITE_URL})`; element.style.backgroundSize = '460% 345%'; element.style.backgroundPosition = `${column * 100 / 3}% ${row * 100 / 2}%`; element.style.clipPath = piece.clip; element.style.webkitClipPath = piece.clip;
+  element.style.backgroundColor = piece.color; element.style.backgroundImage = `url(${SPRITE_URL})`; element.style.backgroundSize = '400% 300%'; element.style.backgroundPosition = `${column * 100 / 3}% ${row * 100 / 2}%`; element.style.clipPath = piece.clip; element.style.webkitClipPath = piece.clip;
 }
 function createPiece(piece) {
   const element = document.createElement('button');
