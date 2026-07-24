@@ -124,11 +124,11 @@ function beginRound(type) {
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     songAudio.play().then(startLifeNoiseVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'rain') {
-    muted = false; rainAudio.currentTime = 0; rainAudio.muted = false; rainAudio.volume = .88;
+    muted = false; rainAudio.currentTime = 0; rainAudio.muted = false; rainAudio.volume = .72;
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     rainAudio.play().then(startRainVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '빗소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'wave') {
-    muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = 1;
+    muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82;
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     waveAudio.play().then(startWaveVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '파도 소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
