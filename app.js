@@ -35,7 +35,7 @@ function createNoise(type) {
   const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
   // The layered filters lower the raw signal level; restore an audible mobile listening volume.
   // Wave keeps a small extra lift because low frequencies are less audible on phone speakers.
-  const volume = type === 'wave' ? .42 : .35;
+  const volume = type === 'wave' ? .82 : .35;
   analyser.fftSize = 128; analyser.smoothingTimeConstant = .22;
   const layerSettings = type === 'wave'
     ? [[220, .30, .16, .18], [680, .20, .13, .36], [1750, .11, .08, .62]]
