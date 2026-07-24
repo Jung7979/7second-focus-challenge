@@ -22,7 +22,8 @@ function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id
 function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
   element.style.backgroundColor = 'transparent';
-  element.style.backgroundImage = `url(${piece.id === 'underwear' ? 'assets/pieces-full/underwear.jpg' : `assets/pieces-shaped/${piece.id}.png`})`;
+  const imagePath = piece.id === 'underwear' ? 'assets/pieces-full/underwear.jpg' : piece.id === 'shoes' ? 'assets/pieces-shaped/shoes-l.png' : `assets/pieces-shaped/${piece.id}.png`;
+  element.style.backgroundImage = `url(${imagePath})`;
   element.style.backgroundSize = piece.id === 'pouch' ? '92% 92%' : '100% 100%';
   element.style.backgroundPosition = piece.id === 'pouch' ? 'center 42%' : 'center';
   element.style.backgroundOrigin = 'border-box';
