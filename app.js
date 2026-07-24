@@ -1,5 +1,5 @@
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
-const soundNames = { rain: '빗소리', wave: '파도 소리', brown: '브라운 노이즈' };
+const soundNames = { rain: '빗소리', wave: '파도 소리' };
 const songAudio = document.querySelector('#song-audio');
 const soundVisual = document.querySelector('#sound-visual');
 const visualBars = [...soundVisual.querySelectorAll('i')];
@@ -11,15 +11,13 @@ function createNoise(type) {
   audioContext ??= new AudioContext();
   const size = audioContext.sampleRate * 2;
   const buffer = audioContext.createBuffer(1, size, audioContext.sampleRate);
-  const data = buffer.getChannelData(0); let last = 0;
+  const data = buffer.getChannelData(0);
   for (let i = 0; i < size; i++) {
     const white = Math.random() * 2 - 1;
-    last = type === 'brown' ? (last + .02 * white) / 1.02 : white;
-    const brown = Math.max(-1, Math.min(1, last * 5 + white * .08));
-    data[i] = type === 'wave' ? last * .55 + Math.sin(i / 1700) * .15 : type === 'brown' ? brown : last;
+    data[i] = type === 'wave' ? white * .55 + Math.sin(i / 1700) * .15 : white;
   }
   const source = audioContext.createBufferSource(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
-  const volume = type === 'brown' ? .065 : .045;
+  const volume = .045;
   analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
   source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : volume; source.connect(analyser).connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser, volume };
 }
