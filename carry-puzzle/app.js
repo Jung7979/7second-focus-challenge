@@ -1,14 +1,17 @@
-const COLS = 5, ROWS = 4, GAME_SECONDS = 30;
+const COLS = 6, ROWS = 5, GAME_SECONDS = 30;
 const pieces = [
   { id: 'hoodie', name: '후드', icon: '🧥', w: 3, h: 2, color: '#ffb34f' },
   { id: 'tops', name: '티셔츠', icon: '👕', w: 2, h: 2, color: '#8fc6ff' },
-  { id: 'pants', name: '팬츠', icon: '👖', w: 1, h: 2, color: '#a9a0f5' },
+  { id: 'pants', name: '팬츠', icon: '👖', w: 1, h: 3, color: '#a9a0f5' },
   { id: 'pouch', name: '세면 파우치', icon: '🧴', w: 2, h: 1, color: '#ffc3a8' },
   { id: 'tee', name: '반팔', icon: '👚', w: 2, h: 1, color: '#a5dfc1' },
   { id: 'socks', name: '양말', icon: '🧦', w: 1, h: 1, color: '#ff9fb0' },
   { id: 'charger', name: '충전기', icon: '🔌', w: 1, h: 1, color: '#d5b692' },
   { id: 'underwear', name: '속옷', icon: '🩲', w: 1, h: 1, color: '#d7a9e8' },
-  { id: 'passport', name: '여권', icon: '🛂', w: 1, h: 1, color: '#80cbd0' }
+  { id: 'passport', name: '여권', icon: '🛂', w: 1, h: 1, color: '#80cbd0' },
+  { id: 'shoes', name: '신발', icon: '👟', w: 2, h: 2, color: '#f1cd88' },
+  { id: 'cap', name: '모자', icon: '🧢', w: 1, h: 2, color: '#d9b5ed' },
+  { id: 'guide', name: '여행 안내서', icon: '🗺️', w: 3, h: 1, color: '#b7d6a8' }
 ];
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const board = document.querySelector('#board'), tray = document.querySelector('#tray'), timerValue = document.querySelector('#timer-value'), pieceCount = document.querySelector('#piece-count'), hint = document.querySelector('#game-hint');
