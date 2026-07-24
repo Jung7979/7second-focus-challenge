@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="여행 짐 조각을 사각 캐리어에 빈틈없이 담아보는 30초 압축 파우치 퍼즐 게임" />
+    <meta property="og:title" content="캐리어 공간절약 퍼즐 | 여행용 압축 파우치" />
+    <meta property="og:description" content="30초 안에 모든 여행 짐 조각을 사각 캐리어에 넣고 압축 파우치 혜택을 확인하세요." />
+    <meta name="theme-color" content="#173b64" />
+    <title>캐리어 공간절약 퍼즐 | 여행용 압축 파우치</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell" aria-live="polite">
+      <header class="brand"><span class="brand-mark">✦</span><span>PACK:SMART</span></header>
+
+      <section id="intro-screen" class="screen active" aria-labelledby="intro-title">
+        <p class="eyebrow">30-SECOND PACKING PUZZLE</p>
+        <h1 id="intro-title">사각 캐리어를<br /><strong>빈틈없이 채워보세요.</strong></h1>
+        <p class="lede">여행 짐 조각을 드래그해 캐리어 안에 모두 담아보세요. 압축 파우치로 짐을 정리하는 즐거움을 30초 안에 체험합니다.</p>
+        <div class="benefit-chip"><span>🎁</span><span>완료 시 <b>압축 파우치 3,000원 할인</b><small>수업용 예시 쿠폰</small></span></div>
+        <button id="start-button" class="button primary">퍼즐 시작하기 <span>→</span></button>
+        <p class="privacy-note">개인정보 입력 없음 · 30초 안에 끝나는 모바일 퍼즐</p>
+      </section>
+
+      <section id="game-screen" class="screen" aria-labelledby="game-title">
+        <div class="game-topline"><p class="eyebrow">PACK THE CARRY-ON</p><div class="timer"><span>남은 시간</span><strong id="timer-value">30</strong></div></div>
+        <h2 id="game-title">짐 조각을 모두<br />캐리어 안으로 옮겨주세요.</h2>
+        <p id="game-hint" class="hint">조각을 길게 눌러 드래그하면 칸에 맞춰 놓을 수 있어요.</p>
+        <div class="suitcase-wrap">
+          <div class="suitcase-handle"></div>
+          <div id="board" class="board" aria-label="사각 캐리어 퍼즐판"></div>
+        </div>
+        <p class="tray-title">아래 여행 짐을 모두 담아보세요 <span id="piece-count">0 / 9</span></p>
+        <div id="tray" class="tray" aria-label="여행 짐 조각"></div>
+        <button id="restart-button" class="text-button">처음부터 다시 담기</button>
+      </section>
+
+      <section id="result-screen" class="screen" aria-labelledby="result-title">
+        <p id="result-eyebrow" class="eyebrow">PACKING COMPLETE</p>
+        <h2 id="result-title">캐리어를<br /><strong>빈틈없이 채웠어요!</strong></h2>
+        <p id="result-copy" class="lede"></p>
+        <div class="offer-card"><span class="offer-label">참여 완료 혜택</span><strong>여행용 압축 파우치 <em>3,000원</em> 할인</strong><p>수업용 예시 쿠폰 · 실제 발급·할인은 제공되지 않습니다.</p><details><summary>예시 쿠폰 사용 조건 보기</summary><ul><li>여행용 압축 파우치 본품 20,000원 이상 구매 시</li><li>2026.08.01 ~ 2026.08.31</li><li>다른 쿠폰과 중복 사용 불가</li></ul></details></div>
+        <!-- 제출 전 href를 실제 판매 중인 내 상품 상세 URL로 바꾸세요. -->
+        <a class="button primary product-link" href="https://search.shopping.naver.com/search/all?query=%EC%97%AC%ED%96%89%EC%9A%A9%20%EC%95%95%EC%B6%95%20%ED%8C%8C%EC%9A%B0%EC%B9%98">여행용 압축 파우치 보기 <span>→</span></a>
+        <button id="play-again-button" class="text-button">다시 도전하기</button>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
