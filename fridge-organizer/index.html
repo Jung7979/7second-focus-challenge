@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#eff8ff" />
+  <title>냉장고 정리 15초 챌린지 | 밀폐용기</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <p class="eyebrow">FRIDGE RESET CHALLENGE</p>
+      <div class="topline"><h1>냉장고 정리<br />15초 챌린지</h1><span id="timer" aria-label="남은 시간">0:15</span></div>
+      <p>재료를 탭한 뒤 알맞은 밀폐용기에 담아보세요.</p>
+    </header>
+
+    <section class="game-card" aria-label="냉장고 정리 게임">
+      <div class="status"><strong id="mission">정리한 재료 0 / 8</strong><span id="feedback" aria-live="polite">신선함을 지켜볼까요?</span></div>
+      <div class="fridge">
+        <div class="fridge-head"><span>❄️ FRESH BOX</span><small>탭해서 정리</small></div>
+        <div class="containers" id="containers">
+          <button class="container produce" data-type="produce"><span>🥬</span><b>채소·과일</b><small>아삭하게 보관</small><i></i></button>
+          <button class="container deli" data-type="deli"><span>🧀</span><b>유제품·반찬</b><small>냄새 섞임 방지</small><i></i></button>
+          <button class="container snack" data-type="snack"><span>🍪</span><b>간식·소스</b><small>새지 않게 밀폐</small><i></i></button>
+        </div>
+      </div>
+      <p class="selection" id="selection">아래 재료를 하나 선택하세요.</p>
+      <div class="foods" id="foods" aria-label="정리할 재료"></div>
+    </section>
+
+    <button class="restart" id="restart" type="button">↻ 처음부터 다시 정리하기</button>
+    <p class="privacy">개인정보 입력 없음 · 15초 안에 끝나는 모바일 챌린지</p>
+  </main>
+
+  <section class="result" id="result" aria-modal="true" role="dialog" aria-hidden="true">
+    <div class="result-card">
+      <p class="eyebrow">FRIDGE RESET COMPLETE</p>
+      <h2 id="resultTitle">냉장고 정리 완료!</h2>
+      <p id="resultCopy">재료를 분류해 담았어요. 밀폐 보관으로 냄새와 신선도를 함께 관리해 보세요.</p>
+      <div class="reward"><span>참여 완료 혜택</span><strong>밀폐용기 세트 <em>3,000원 할인</em></strong><small>수업용 예시 쿠폰 · 실제 발급·할인은 제공되지 않습니다.</small></div>
+      <a class="cta" href="https://search.shopping.naver.com/search/all?query=%EB%83%89%EC%9E%A5%EA%B3%A0%20%EB%B0%80%ED%8F%90%EC%9A%A9%EA%B8%B0%20%EC%84%B8%ED%8A%B8" target="_blank" rel="noopener">냉장고 밀폐용기 세트 보기 <span>→</span></a>
+      <button class="again" id="again" type="button">다시 정리하기</button>
+    </div>
+  </section>
+  <script src="app.js"></script>
+</body>
+</html>
