@@ -1,18 +1,18 @@
-const COLS = 6, ROWS = 5, GAME_SECONDS = 30;
+const COLS = 8, ROWS = 6, GAME_SECONDS = 30;
 const SPRITE_URL = 'assets/travel-items-sprite.png';
 const pieces = [
-  { id: 'hoodie', name: '후드', w: 3, h: 2, color: '#ffb34f', sprite: 0 },
-  { id: 'tops', name: '티셔츠', w: 2, h: 2, color: '#8fc6ff', sprite: 1 },
-  { id: 'pants', name: '팬츠', w: 1, h: 3, color: '#a9a0f5', sprite: 2 },
-  { id: 'pouch', name: '세면 파우치', w: 2, h: 1, color: '#ffc3a8', sprite: 3 },
-  { id: 'tee', name: '반팔', w: 2, h: 1, color: '#a5dfc1', sprite: 4 },
-  { id: 'socks', name: '양말', w: 1, h: 1, color: '#ff9fb0', sprite: 5 },
-  { id: 'charger', name: '충전기', w: 1, h: 1, color: '#d5b692', sprite: 6 },
-  { id: 'underwear', name: '속옷', w: 1, h: 1, color: '#d7a9e8', sprite: 7 },
-  { id: 'passport', name: '여권', w: 1, h: 1, color: '#80cbd0', sprite: 8 },
-  { id: 'shoes', name: '신발', w: 2, h: 2, color: '#f1cd88', sprite: 9 },
-  { id: 'cap', name: '모자', w: 1, h: 2, color: '#d9b5ed', sprite: 10 },
-  { id: 'guide', name: '여행 안내서', w: 3, h: 1, color: '#b7d6a8', sprite: 11 }
+  { id: 'hoodie', name: '후드', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]], clip: 'none', color: '#ffb34f', sprite: 0 },
+  { id: 'tops', name: '티셔츠', w: 2, h: 3, cells: [[0,0],[0,1],[0,2],[1,2]], clip: 'polygon(0 0,50% 0,50% 66.667%,100% 66.667%,100% 100%,0 100%)', color: '#8fc6ff', sprite: 1 },
+  { id: 'pants', name: '팬츠', w: 1, h: 4, cells: [[0,0],[0,1],[0,2],[0,3]], clip: 'none', color: '#a9a0f5', sprite: 2 },
+  { id: 'pouch', name: '세면 파우치', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[1,1]], clip: 'polygon(0 0,100% 0,100% 50%,66.667% 50%,66.667% 100%,33.333% 100%,33.333% 50%,0 50%)', color: '#ffc3a8', sprite: 3 },
+  { id: 'tee', name: '반팔', w: 3, h: 2, cells: [[1,0],[2,0],[0,1],[1,1]], clip: 'polygon(33.333% 0,100% 0,100% 50%,66.667% 50%,66.667% 100%,0 100%,0 50%,33.333% 50%)', color: '#a5dfc1', sprite: 4 },
+  { id: 'socks', name: '양말', w: 2, h: 2, cells: [[0,0],[0,1],[1,1]], clip: 'polygon(0 0,50% 0,50% 50%,100% 50%,100% 100%,0 100%)', color: '#ff9fb0', sprite: 5 },
+  { id: 'charger', name: '충전기', w: 2, h: 2, cells: [[0,0],[1,0],[0,1],[1,1]], clip: 'none', color: '#d5b692', sprite: 6 },
+  { id: 'underwear', name: '속옷', w: 2, h: 2, cells: [[0,0],[1,0],[0,1]], clip: 'polygon(0 0,100% 0,50% 50%,50% 100%,0 100%)', color: '#d7a9e8', sprite: 7 },
+  { id: 'passport', name: '여권', w: 3, h: 1, cells: [[0,0],[1,0],[2,0]], clip: 'none', color: '#80cbd0', sprite: 8 },
+  { id: 'shoes', name: '신발', w: 3, h: 2, cells: [[0,0],[0,1],[1,1],[2,1]], clip: 'polygon(0 0,33.333% 0,33.333% 50%,100% 50%,100% 100%,0 100%)', color: '#f1cd88', sprite: 9 },
+  { id: 'cap', name: '모자', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[1,1]], clip: 'polygon(0 0,100% 0,100% 50%,66.667% 50%,66.667% 100%,33.333% 100%,33.333% 50%,0 50%)', color: '#d9b5ed', sprite: 10 },
+  { id: 'guide', name: '여행 안내서', w: 5, h: 1, cells: [[0,0],[1,0],[2,0],[3,0],[4,0]], clip: 'none', color: '#b7d6a8', sprite: 11 }
 ];
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const board = document.querySelector('#board'), tray = document.querySelector('#tray'), timerValue = document.querySelector('#timer-value'), pieceCount = document.querySelector('#piece-count'), hint = document.querySelector('#game-hint');
@@ -23,7 +23,7 @@ function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id
 function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
   const column = piece.sprite % 4, row = Math.floor(piece.sprite / 4);
-  element.style.backgroundColor = piece.color; element.style.backgroundImage = `url(${SPRITE_URL})`; element.style.backgroundSize = '400% 300%'; element.style.backgroundPosition = `${column * 100 / 3}% ${row * 100 / 2}%`;
+  element.style.backgroundColor = piece.color; element.style.backgroundImage = `url(${SPRITE_URL})`; element.style.backgroundSize = '460% 345%'; element.style.backgroundPosition = `${column * 100 / 3}% ${row * 100 / 2}%`; element.style.clipPath = piece.clip; element.style.webkitClipPath = piece.clip;
 }
 function createPiece(piece) {
   const element = document.createElement('button');
@@ -46,14 +46,14 @@ function occupiedCells(exceptId) {
   const cells = new Set();
   pieces.filter(piece => piece.id !== exceptId && isPlaced(piece)).forEach(piece => {
     const position = state[piece.id];
-    for (let y = position.y; y < position.y + piece.h; y++) for (let x = position.x; x < position.x + piece.w; x++) cells.add(`${x},${y}`);
+    piece.cells.forEach(([cellX, cellY]) => cells.add(`${position.x + cellX},${position.y + cellY}`));
   });
   return cells;
 }
 function canPlace(piece, x, y) {
   if (x < 0 || y < 0 || x + piece.w > COLS || y + piece.h > ROWS) return false;
   const occupied = occupiedCells(piece.id);
-  for (let row = y; row < y + piece.h; row++) for (let col = x; col < x + piece.w; col++) if (occupied.has(`${col},${row}`)) return false;
+  for (const [cellX, cellY] of piece.cells) if (occupied.has(`${x + cellX},${y + cellY}`)) return false;
   return true;
 }
 function beginDrag(event) {
