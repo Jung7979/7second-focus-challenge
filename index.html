@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#132544" />
+    <meta name="description" content="백색소음기 프로모션: 소리에 흔들리지 않고 7초를 맞혀 보세요." />
+    <title>7초 집중력 챌린지 | 나만의 소리 환경</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell" aria-live="polite">
+      <header class="brand"><span class="brand-dot"></span><span>소리쉼표</span></header>
+
+      <section id="intro-screen" class="screen active" aria-labelledby="intro-title">
+        <p class="eyebrow">WHITE NOISE MINI GAME</p>
+        <h1 id="intro-title">소리에 흔들리지 않고<br /><strong>7초를 맞혀 보세요.</strong></h1>
+        <p class="lede">오늘은 어떤 소리와 함께 잠시 집중해 볼까요?</p>
+
+        <fieldset class="sound-picker">
+          <legend class="sr-only">사운드 선택</legend>
+          <label class="sound-card selected">
+            <input type="radio" name="sound" value="rain" checked />
+            <span class="sound-icon">☂</span><span><b>빗소리</b><small>사각사각 편안한 리듬</small></span>
+          </label>
+          <label class="sound-card">
+            <input type="radio" name="sound" value="wave" />
+            <span class="sound-icon">〰</span><span><b>파도 소리</b><small>느긋하게 밀려오는 소리</small></span>
+          </label>
+          <label class="sound-card">
+            <input type="radio" name="sound" value="brown" />
+            <span class="sound-icon">◒</span><span><b>브라운 노이즈</b><small>낮고 포근한 배경음</small></span>
+          </label>
+        </fieldset>
+        <button id="start-button" class="button primary">7초 챌린지 시작 <span>→</span></button>
+        <p class="privacy-note">개인정보 입력 없이 바로 참여할 수 있어요.</p>
+      </section>
+
+      <section id="play-screen" class="screen" aria-labelledby="play-title">
+        <p class="eyebrow" id="sound-name">빗소리와 함께</p>
+        <h2 id="play-title">7초라고 느끼는 순간<br />버튼을 눌러주세요.</h2>
+        <div class="wave-area" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <p class="play-hint">눈으로 세지 말고, 소리에 잠시 맡겨 보세요.</p>
+        <button id="stop-button" class="button stop">멈추기</button>
+        <button id="mute-button" class="text-button" aria-pressed="false">♬ 소리 끄기</button>
+      </section>
+
+      <section id="result-screen" class="screen" aria-labelledby="result-title">
+        <p class="eyebrow">CHALLENGE COMPLETE</p>
+        <h2 id="result-title">잘하셨어요!</h2>
+        <div class="record-card">
+          <span>내 기록</span><strong id="record-value">7.00초</strong>
+          <p id="difference-value">7초와 0.00초 차이</p>
+        </div>
+        <p id="result-copy" class="result-copy"></p>
+        <div class="offer-card">
+          <span class="offer-label">참여 완료 혜택</span>
+          <strong>백색소음기 <em>3,000원</em> 할인</strong>
+          <p>수업용 예시 쿠폰 · 실제 발급·할인은 제공되지 않습니다.</p>
+          <details>
+            <summary>예시 쿠폰 사용 조건 보기</summary>
+            <ul><li>백색소음기 본품 20,000원 이상 구매 시</li><li>2026.08.01 ~ 2026.08.31</li><li>다른 쿠폰과 중복 사용 불가</li></ul>
+          </details>
+        </div>
+        <!-- data-product-url을 실제 판매 중인 내 상품 상세 URL로 반드시 교체하세요. -->
+        <a id="product-link" class="button primary product-link" href="https://search.shopping.naver.com/search/all?query=%EB%B0%B1%EC%83%89%EC%86%8C%EC%9D%8C%EA%B8%B0" data-product-url="https://search.shopping.naver.com/search/all?query=%EB%B0%B1%EC%83%89%EC%86%8C%EC%9D%8C%EA%B8%B0">백색소음기 상품 보기 <span>→</span></a>
+        <button id="retry-button" class="text-button">다른 소리로 한 번 더</button>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
