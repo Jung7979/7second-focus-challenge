@@ -3,6 +3,7 @@ const soundNames = { rain: '빗소리', wave: '파도 소리' };
 const songAudio = document.querySelector('#song-audio');
 const soundVisual = document.querySelector('#sound-visual');
 const visualBars = [...soundVisual.querySelectorAll('i')];
+visualBars.forEach((bar, index) => bar.style.setProperty('--angle', `${index * (360 / visualBars.length)}deg`));
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
@@ -23,15 +24,15 @@ function createNoise(type) {
 }
 function startVisualizer(analyser) {
   activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); visualBars.forEach((bar, index) => { const bin = Math.min(visualData.length - 1, 2 + Math.floor(index * (visualData.length - 3) / visualBars.length)); const level = visualData[bin] / 255; bar.style.height = `${34 + level * 185}px`; bar.style.transform = `translateY(${(1 - level) * 10}px)`; }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); visualBars.forEach((bar, index) => { const bin = Math.min(visualData.length - 1, 2 + Math.floor(index * (visualData.length - 3) / visualBars.length)); const level = visualData[bin] / 255; bar.style.setProperty('--offset', `-${78 + level * 52}px`); bar.style.setProperty('--scale', `${.55 + level * 1.25}`); }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
-function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; visualBars.forEach(bar => { bar.style.height = ''; bar.style.transform = ''; }); }
+function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; visualBars.forEach(bar => { bar.style.removeProperty('--offset'); bar.style.removeProperty('--scale'); }); }
 function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; stopVisualizer(); }
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
   const remaining = 7 - (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
-  if (remaining <= 2) timer.classList.add('is-hidden');
+  if (remaining <= 3) timer.classList.add('is-hidden');
   else { timer.classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = `${remaining.toFixed(2)}초`; }
   timerFrame = requestAnimationFrame(updateTimer);
 }
