@@ -12,10 +12,16 @@ function createNoise(type) {
   const size = audioContext.sampleRate * 2;
   const buffer = audioContext.createBuffer(1, size, audioContext.sampleRate);
   const data = buffer.getChannelData(0); let last = 0;
-  for (let i = 0; i < size; i++) { const white = Math.random() * 2 - 1; last = type === 'brown' ? (last + .02 * white) / 1.02 : white; data[i] = type === 'wave' ? last * .55 + Math.sin(i / 1700) * .15 : last; }
+  for (let i = 0; i < size; i++) {
+    const white = Math.random() * 2 - 1;
+    last = type === 'brown' ? (last + .02 * white) / 1.02 : white;
+    const brown = Math.max(-1, Math.min(1, last * 5 + white * .08));
+    data[i] = type === 'wave' ? last * .55 + Math.sin(i / 1700) * .15 : type === 'brown' ? brown : last;
+  }
   const source = audioContext.createBufferSource(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
+  const volume = type === 'brown' ? .065 : .045;
   analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
-  source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : .045; source.connect(analyser).connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser };
+  source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : volume; source.connect(analyser).connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser, volume };
 }
 function getSongAnalyser() {
   audioContext ??= new AudioContext();
@@ -71,5 +77,5 @@ document.querySelectorAll('.sound-card').forEach(card => card.addEventListener('
 document.querySelector('#song-round-button').addEventListener('click', () => beginRound('song'));
 document.querySelector('#noise-round-button').addEventListener('click', () => beginRound('noise'));
 document.querySelector('#stop-button').addEventListener('click', recordRound);
-document.querySelector('#mute-button').addEventListener('click', event => { muted = !muted; if (noiseSource) noiseSource.gain.gain.value = muted ? 0 : .045; if (songGain) songGain.gain.value = muted ? 0 : 1; event.currentTarget.textContent = muted ? '♬ 소리 켜기' : '♬ 소리 끄기'; event.currentTarget.setAttribute('aria-pressed', muted); });
+document.querySelector('#mute-button').addEventListener('click', event => { muted = !muted; if (noiseSource) noiseSource.gain.gain.value = muted ? 0 : noiseSource.volume; if (songGain) songGain.gain.value = muted ? 0 : 1; event.currentTarget.textContent = muted ? '♬ 소리 켜기' : '♬ 소리 끄기'; event.currentTarget.setAttribute('aria-pressed', muted); });
 document.querySelector('#retry-button').addEventListener('click', () => { stopTimer(); stopSound(); records.song = records.noise = null; comparisonStarted = false; show('intro'); });
