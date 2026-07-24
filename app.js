@@ -37,9 +37,9 @@ function updateTimer() {
 }
 function beginRound(type) {
   round = type; document.querySelector('#timer-readout').classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = '7.00초';
-  const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 음악 모드' : `ROUND 2 OF 2 · ${soundNames[selectedSound]}`;
+  const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 생활소음 모드' : `ROUND 2 OF 2 · ${soundNames[selectedSound]}`;
   document.querySelector('#sound-visual').dataset.mode = isSong ? 'music' : 'noise';
-  document.querySelector('#play-hint').textContent = isSong ? '노래가 들리는 동안 시간 감각에만 집중해 보세요.' : `${soundNames[selectedSound]}와 함께 같은 방식으로 7초를 맞혀 보세요.`;
+  document.querySelector('#play-hint').textContent = isSong ? '생활소음이 들리는 동안 시간 감각에만 집중해 보세요.' : `${soundNames[selectedSound]}와 함께 같은 방식으로 7초를 맞혀 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
   if (isSong) {
     muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = 1;
@@ -60,7 +60,7 @@ function renderResults() {
   const gap = Math.abs(records.noise.difference - records.song.difference);
   let comparisonCopy;
   if (gap <= .1) comparisonCopy = '두 소리에서 비슷한 기록이 나왔어요. 이 게임은 집중력을 평가하지 않는 짧은 시간 감각 체험입니다. 오늘 내게 편한 소리를 찾아보세요.';
-  else if (records.song.difference < records.noise.difference) comparisonCopy = '이번 라운드에서는 음악 모드에서 7초에 더 가깝게 멈췄어요. 한 번의 기록은 집중력의 우열을 뜻하지 않아요. 음악과 백색소음 중 오늘 더 편한 환경을 찾아보세요.';
+  else if (records.song.difference < records.noise.difference) comparisonCopy = '이번 라운드에서는 생활소음 모드에서 7초에 더 가깝게 멈췄어요. 한 번의 기록은 집중력의 우열을 뜻하지 않아요. 생활소음과 백색소음 중 오늘 더 편한 환경을 찾아보세요.';
   else comparisonCopy = `이번 라운드에서는 ${soundNames[selectedSound]}에서 7초에 더 가깝게 멈췄어요. 한 번의 기록은 집중력의 우열을 뜻하지 않아요. 오늘 내게 편한 소리 환경을 찾아보세요.`;
   document.querySelector('#comparison-copy').textContent = comparisonCopy;
   show('result');

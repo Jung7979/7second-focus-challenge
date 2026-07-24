@@ -4,19 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#132544" />
-    <meta name="description" content="백색소음기 프로모션: 음악과 백색소음 속 7초 시간 감각을 가볍게 비교해 보세요." />
+    <meta name="description" content="백색소음기 프로모션: 생활소음과 백색소음 속 7초 시간 감각을 가볍게 비교해 보세요." />
     <title>7초 집중력 챌린지 | 나만의 소리 환경</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="game-shell" aria-live="polite">
       <header class="brand"><span class="brand-dot"></span><span>소리쉼표</span></header>
-      <audio id="song-audio" class="game-audio" preload="auto"><source src="assets/binggeul-dora.mp3" type="audio/mpeg" /></audio>
+      <audio id="song-audio" class="game-audio" preload="auto"><source src="assets/life-distraction-12s.wav" type="audio/wav" /></audio>
 
       <section id="intro-screen" class="screen active" aria-labelledby="intro-title">
         <p class="eyebrow">SOUND COMPARISON CHALLENGE</p>
         <h1 id="intro-title">두 가지 소리에서<br /><strong>7초 감각을 비교해 보세요.</strong></h1>
-        <p class="lede">원하는 소리를 고르면 음악 라운드가 바로 시작되고, 이어서 선택한 백색소음과 시간 감각을 비교합니다.</p>
+        <p class="lede">원하는 소리를 고르면 생활소음 라운드가 바로 시작되고, 이어서 선택한 백색소음과 시간 감각을 비교합니다.</p>
         <fieldset class="sound-picker">
           <legend class="sr-only">백색소음 선택</legend>
           <label class="sound-card selected"><input type="radio" name="sound" value="rain" checked /><span class="sound-icon">☂</span><span><b>빗소리</b><small>사각사각 편안한 리듬</small></span></label>
@@ -26,11 +26,11 @@
       </section>
 
       <section id="song-setup-screen" class="screen" aria-labelledby="song-setup-title">
-        <p class="eyebrow">ROUND 1 OF 2 · 음악 모드</p>
-        <h2 id="song-setup-title">노래를 재생한 뒤<br />7초 챌린지를 시작하세요.</h2>
-        <p class="lede compact">1차 시작 버튼을 누르면 제공한 노래가 재생됩니다. 음악이 계속되는 동안 7초라고 느끼는 순간 멈추기를 누르세요.</p>
-        <div class="audio-card"><span>음악 모드 · 빙글 돌아</span><small>1차 시작과 함께 자동 재생됩니다.</small></div>
-        <button id="song-round-button" class="button primary">노래와 함께 1차 시작 <span>→</span></button>
+        <p class="eyebrow">ROUND 1 OF 2 · 생활소음 모드</p>
+        <h2 id="song-setup-title">생활소음과 함께<br />7초 챌린지를 시작하세요.</h2>
+        <p class="lede compact">1차 시작 버튼을 누르면 원본 생활소음이 재생됩니다. 소리가 계속되는 동안 7초라고 느끼는 순간 멈추기를 누르세요.</p>
+        <div class="audio-card"><span>생활소음 모드 · 카페/사무실 소리</span><small>1차 시작과 함께 자동 재생됩니다.</small></div>
+        <button id="song-round-button" class="button primary">생활소음과 1차 시작 <span>→</span></button>
       </section>
 
       <section id="play-screen" class="screen" aria-labelledby="play-title">
@@ -38,7 +38,7 @@
         <h2 id="play-title">7초라고 느끼는 순간<br />버튼을 눌러주세요.</h2>
         <div id="timer-readout" class="timer-readout" aria-label="남은 시간"><span>남은 시간</span><strong id="timer-value">7.00초</strong></div>
         <div id="sound-visual" class="wave-area" data-mode="music" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <p id="play-hint" class="play-hint">노래가 들리는 동안 시간 감각에만 집중해 보세요.</p>
+        <p id="play-hint" class="play-hint">생활소음이 들리는 동안 시간 감각에만 집중해 보세요.</p>
         <button id="stop-button" class="button stop">멈추기</button>
         <button id="mute-button" class="text-button hidden" aria-pressed="false">♬ 소리 끄기</button>
       </section>
@@ -54,7 +54,7 @@
         <p class="eyebrow">SOUND COMPARISON COMPLETE</p>
         <h2 id="result-title">두 기록을 비교해 봤어요.</h2>
         <div class="comparison-grid">
-          <div class="compare-card music"><span>1차 · 음악 모드</span><strong id="song-record">-</strong><small id="song-difference">7초와 -초 차이</small></div>
+          <div class="compare-card music"><span>1차 · 생활소음 모드</span><strong id="song-record">-</strong><small id="song-difference">7초와 -초 차이</small></div>
           <div class="compare-card noise"><span id="noise-card-label">2차 · 빗소리</span><strong id="noise-record">-</strong><small id="noise-difference">7초와 -초 차이</small></div>
         </div>
         <p id="comparison-copy" class="result-copy"></p>
