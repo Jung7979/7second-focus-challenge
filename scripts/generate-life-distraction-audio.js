@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Original 12-second "distracting everyday noise" bed.
-// It is synthesized from scratch: room hum, distant speech-like texture,
-// keyboard taps, a notification-like chime, and occasional cup clinks.
+// It is synthesized from scratch: nearby speech-like texture, keyboard taps,
+// alert-like chimes, cup/desk clinks, and a slightly busy room tone.
 const sampleRate = 44100;
 const duration = 12;
 const length = sampleRate * duration;
@@ -36,40 +36,51 @@ function addSoftBurst(start, seconds, amplitude, tone) {
   }
 }
 
-// A quiet room/air-conditioner bed.
+// A busy shared-office/cafe room bed.
 let roomNoise = 0;
 for (let i = 0; i < length; i++) {
   const time = i / sampleRate;
   roomNoise = roomNoise * 0.985 + (random() * 2 - 1) * 0.015;
-  samples[i] += roomNoise * 0.13 + Math.sin(Math.PI * 2 * 96 * time) * 0.012 + Math.sin(Math.PI * 2 * 153 * time) * 0.006;
+  samples[i] += roomNoise * 0.18 + Math.sin(Math.PI * 2 * 96 * time) * 0.018 + Math.sin(Math.PI * 2 * 153 * time) * 0.009;
 }
 
-// Distant, unintelligible conversation-like texture (no speech recording).
-[[0.55, .58, .095, 215], [1.75, .44, .08, 305], [2.55, .72, .10, 185],
- [4.12, .62, .09, 270], [5.32, .36, .08, 220], [6.20, .76, .10, 175],
- [7.88, .54, .09, 285], [9.10, .72, .10, 195], [10.72, .48, .08, 250]]
+// Nearby, unintelligible conversation-like texture (no speech recording).
+// Frequent starts/stops intentionally make it harder to ignore than a steady ambience.
+[[0.38, .70, .18, 215], [1.28, .56, .15, 305], [2.08, .84, .19, 185],
+ [3.42, .68, .16, 270], [4.18, .54, .15, 220], [5.18, .82, .20, 175],
+ [6.42, .60, .17, 285], [7.18, .72, .18, 195], [8.48, .88, .20, 250],
+ [10.02, .64, .17, 290], [10.92, .52, .16, 205]]
   .forEach(([start, seconds, amplitude, tone]) => addSoftBurst(start, seconds, amplitude, tone));
 
-// Keyboard taps: short, slightly varied percussive clicks.
-[1.18, 1.34, 1.50, 3.32, 3.48, 3.63, 3.79, 6.95, 7.10, 7.27, 8.54, 8.70, 8.86, 11.06]
+// Keyboard taps and desk impacts: short, irregular and deliberately noticeable.
+[0.92, 1.08, 1.24, 1.40, 2.92, 3.08, 3.23, 3.38, 3.54, 5.92, 6.08,
+ 6.23, 6.40, 7.74, 7.90, 8.06, 9.42, 9.58, 9.74, 11.18]
   .forEach((start, index) => {
-    addSoftBurst(start, .038 + (index % 3) * .006, .17, 950 + (index % 4) * 145);
-    addTone(start, .025, 1400 + (index % 5) * 90, .045, 95);
+    addSoftBurst(start, .042 + (index % 3) * .008, .27, 950 + (index % 4) * 145);
+    addTone(start, .030, 1400 + (index % 5) * 90, .085, 95);
   });
 
-// A subtle but recognisable phone notification and two cup/desk clinks.
-addTone(4.82, .20, 880, .10, 12); addTone(4.91, .18, 1175, .075, 14);
-[[2.08, 1360], [9.86, 1180]].forEach(([start, frequency]) => {
-  addTone(start, .18, frequency, .11, 18);
-  addTone(start + .012, .13, frequency * 1.42, .045, 23);
+// Repeated notification-like pings and cup/desk clinks create distinct attention shifts.
+[[2.48, 784], [4.84, 880], [7.02, 988], [10.42, 784]].forEach(([start, frequency]) => {
+  addTone(start, .16, frequency, .22, 13);
+  addTone(start + .095, .15, frequency * 1.33, .17, 15);
+});
+[[1.84, 1360], [5.58, 1180], [8.92, 1290]].forEach(([start, frequency]) => {
+  addTone(start, .20, frequency, .18, 18);
+  addTone(start + .012, .14, frequency * 1.42, .08, 23);
 });
 
 // Gentle fade in/out and clipping protection.
 for (let i = 0; i < length; i++) {
   const time = i / sampleRate;
   const fade = Math.min(1, time / .18, (duration - time) / .35);
-  samples[i] = Math.max(-.92, Math.min(.92, samples[i] * fade));
+  samples[i] *= fade;
 }
+
+// Keep the distractors clearly audible at the game's default volume without clipping.
+const peak = samples.reduce((maximum, sample) => Math.max(maximum, Math.abs(sample)), 0);
+const outputGain = peak ? Math.min(3.2, .78 / peak) : 1;
+for (let i = 0; i < length; i++) samples[i] = Math.max(-.92, Math.min(.92, samples[i] * outputGain));
 
 const dataSize = length * 2;
 const wav = Buffer.alloc(44 + dataSize);
