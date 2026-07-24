@@ -7,11 +7,11 @@ const pieces = [
   { id: 'tee', name: '반팔', w: 3, h: 2, cells: [[1,0],[2,0],[0,1],[1,1]], clip: 'polygon(33.333% 0,100% 0,100% 50%,66.667% 50%,66.667% 100%,0 100%,0 50%,33.333% 50%)', color: '#a5dfc1', sprite: 4 },
   { id: 'socks', name: '양말', w: 2, h: 2, cells: [[0,0],[1,0],[0,1]], clip: 'polygon(0 0,100% 0,100% 50%,50% 50%,50% 100%,0 100%)', color: '#ff9fb0', sprite: 5 },
   { id: 'charger', name: '충전기', w: 2, h: 2, cells: [[0,0],[1,0],[0,1],[1,1]], clip: 'none', color: '#d5b692', sprite: 6 },
-  { id: 'underwear', name: '속옷', w: 2, h: 2, cells: [[0,0],[0,1],[1,1]], clip: 'polygon(0 0,50% 0,50% 50%,100% 50%,100% 100%,0 100%)', color: '#d7a9e8', sprite: 7 },
+  { id: 'underwear', name: '속옷', w: 2, h: 2, cells: [[0,0],[1,0],[0,1],[1,1]], clip: 'none', color: '#d7a9e8', sprite: 7 },
   { id: 'passport', name: '여권', w: 3, h: 1, cells: [[0,0],[1,0],[2,0]], clip: 'none', color: '#80cbd0', sprite: 8 },
   { id: 'shoes', name: '신발', w: 3, h: 2, cells: [[0,0],[0,1],[1,1],[2,1]], clip: 'polygon(0 0,33.333% 0,33.333% 50%,100% 50%,100% 100%,0 100%)', color: '#f1cd88', sprite: 9 },
   { id: 'cap', name: '모자', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[1,1]], clip: 'polygon(0 0,100% 0,100% 50%,66.667% 50%,66.667% 100%,33.333% 100%,33.333% 50%,0 50%)', color: '#d9b5ed', sprite: 10 },
-  { id: 'guide', name: '여행 안내서', w: 5, h: 1, cells: [[0,0],[1,0],[2,0],[3,0],[4,0]], clip: 'none', color: '#b7d6a8', sprite: 11 }
+  { id: 'guide', name: '여행 안내서', w: 4, h: 1, cells: [[0,0],[1,0],[2,0],[3,0]], clip: 'none', color: '#b7d6a8', sprite: 11 }
 ];
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const board = document.querySelector('#board'), tray = document.querySelector('#tray'), timerValue = document.querySelector('#timer-value'), pieceCount = document.querySelector('#piece-count'), hint = document.querySelector('#game-hint');
@@ -23,8 +23,8 @@ function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
   element.style.backgroundColor = piece.color;
   element.style.backgroundImage = `url(assets/pieces-shaped/${piece.id}.png)`;
-  element.style.backgroundSize = '100% 100%';
-  element.style.backgroundPosition = 'center';
+  element.style.backgroundSize = piece.id === 'pouch' ? '92% 92%' : '100% 100%';
+  element.style.backgroundPosition = piece.id === 'pouch' ? 'center 42%' : 'center';
   element.style.backgroundOrigin = 'border-box';
   element.style.backgroundClip = 'border-box';
   element.style.borderColor = 'transparent';
@@ -54,7 +54,7 @@ function puzzleOutline(piece) {
 }
 function createPiece(piece) {
   const element = document.createElement('button');
-  element.type = 'button'; element.className = 'piece'; element.dataset.id = piece.id; applyProductImage(element, piece); applyLabelBounds(element, piece);
+  element.type = 'button'; element.className = `piece piece-${piece.id}`; element.dataset.id = piece.id; applyProductImage(element, piece); applyLabelBounds(element, piece);
   element.innerHTML = `${puzzleOutline(piece)}<span class="piece-label">${piece.name}</span>`;
   element.addEventListener('pointerdown', beginDrag); return element;
 }
@@ -86,7 +86,7 @@ function canPlace(piece, x, y) {
 function beginDrag(event) {
   if (!playing) return;
   event.preventDefault(); const id = event.currentTarget.dataset.id, piece = pieces.find(item => item.id === id), previous = { ...state[id] }, preview = document.createElement('div');
-  state[id] = { x: null, y: null }; preview.className = 'drop-preview'; applyProductImage(preview, piece); applyLabelBounds(preview, piece); preview.innerHTML = `${puzzleOutline(piece)}<span class="piece-label">${piece.name}</span>`; board.append(preview);
+  state[id] = { x: null, y: null }; preview.className = `drop-preview piece-${piece.id}`; applyProductImage(preview, piece); applyLabelBounds(preview, piece); preview.innerHTML = `${puzzleOutline(piece)}<span class="piece-label">${piece.name}</span>`; board.append(preview);
   dragging = { piece, previous, source: event.currentTarget, preview }; dragging.source.style.visibility = 'hidden'; moveDrag(event);
   document.addEventListener('pointermove', moveDrag); document.addEventListener('pointerup', endDrag, { once: true });
 }
