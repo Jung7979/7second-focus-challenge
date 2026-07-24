@@ -21,7 +21,7 @@ function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.
 function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id, { x: null, y: null }])); }
 function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
-  element.style.backgroundColor = piece.color;
+  element.style.backgroundColor = 'transparent';
   element.style.backgroundImage = `url(assets/pieces-shaped/${piece.id}.png)`;
   element.style.backgroundSize = piece.id === 'pouch' ? '92% 92%' : '100% 100%';
   element.style.backgroundPosition = piece.id === 'pouch' ? 'center 42%' : 'center';
