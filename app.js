@@ -13,12 +13,23 @@ const records = { song: null, noise: null };
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
 function createNoise(type) {
   audioContext ??= new AudioContext();
-  const size = audioContext.sampleRate * 2;
+  const size = audioContext.sampleRate * (type === 'rain' ? 6 : 2);
   const buffer = audioContext.createBuffer(1, size, audioContext.sampleRate);
   const data = buffer.getChannelData(0);
+  let rainBed = 0;
   for (let i = 0; i < size; i++) {
     const white = Math.random() * 2 - 1;
-    data[i] = type === 'wave' ? white * .55 + Math.sin(i / 1700) * .15 : white;
+    if (type === 'wave') data[i] = white * .55 + Math.sin(i / 1700) * .15;
+    else { rainBed = rainBed * .985 + white * .015; data[i] = rainBed * .7 + white * .13; }
+  }
+  if (type === 'rain') {
+    for (let cursor = Math.floor(Math.random() * 900); cursor < size; cursor += Math.floor(audioContext.sampleRate * (.045 + Math.random() * .12))) {
+      const duration = Math.floor(audioContext.sampleRate * (.012 + Math.random() * .030)), frequency = 1800 + Math.random() * 4200, strength = .18 + Math.random() * .28;
+      for (let step = 0; step < duration && cursor + step < size; step++) {
+        const time = step / audioContext.sampleRate, envelope = Math.exp(-time * (48 + Math.random() * 34));
+        data[cursor + step] += ((Math.random() * 2 - 1) * .48 + Math.sin(Math.PI * 2 * frequency * time) * .32) * envelope * strength;
+      }
+    }
   }
   const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
   // The layered filters lower the raw signal level; restore an audible mobile listening volume.
@@ -27,7 +38,7 @@ function createNoise(type) {
   analyser.fftSize = 128; analyser.smoothingTimeConstant = .22;
   const layerSettings = type === 'wave'
     ? [[220, .30, .16, .18], [680, .20, .13, .36], [1750, .11, .08, .62]]
-    : [[430, .24, .11, 1.05], [1320, .21, .16, 1.72], [3300, .16, .13, 2.45]];
+    : [[620, .14, .06, .72], [1900, .20, .09, 1.34], [4800, .25, .11, 2.18]];
   const layers = layerSettings.map(([frequency, base, depth, lfoFrequency]) => {
     const filter = audioContext.createBiquadFilter(), layerGain = audioContext.createGain(), lfo = audioContext.createOscillator(), lfoGain = audioContext.createGain();
     filter.type = 'bandpass'; filter.frequency.value = frequency; filter.Q.value = 1.15; layerGain.gain.value = base; lfo.frequency.value = lfoFrequency; lfoGain.gain.value = depth;
