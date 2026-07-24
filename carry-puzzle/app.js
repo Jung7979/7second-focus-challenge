@@ -1,4 +1,4 @@
-const COLS = 8, ROWS = 6, GAME_SECONDS = 45;
+const COLS = 8, ROWS = 6, GAME_SECONDS = 90;
 const pieces = [
   { id: 'hoodie', name: '후드', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]], clip: 'none', color: '#ffb34f', sprite: 0 },
   { id: 'tops', name: '티셔츠', w: 2, h: 3, cells: [[0,0],[0,1],[0,2],[1,2]], clip: 'polygon(0 0,50% 0,50% 66.667%,100% 66.667%,100% 100%,0 100%)', color: '#8fc6ff', sprite: 1 },
@@ -111,10 +111,11 @@ function endDrag(event) {
   dragging = null; render(); if (pieces.every(isPlaced)) finish(true);
 }
 function updateTimer() {
-  const remaining = Math.max(0, GAME_SECONDS - (performance.now() - startedAt) / 1000); timerValue.textContent = Math.ceil(remaining);
+  const remaining = Math.max(0, GAME_SECONDS - (performance.now() - startedAt) / 1000); timerValue.textContent = formatTime(Math.ceil(remaining));
   if (remaining <= 0) finish(false);
 }
-function startGame() { clearInterval(timerId); resetState(); render(); playing = true; startedAt = performance.now(); timerValue.textContent = GAME_SECONDS; hint.textContent = '조각을 길게 눌러 드래그하면 칸에 맞춰 놓을 수 있어요.'; show('game'); timerId = setInterval(updateTimer, 100); }
+function formatTime(seconds) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }
+function startGame() { clearInterval(timerId); resetState(); render(); playing = true; startedAt = performance.now(); timerValue.textContent = formatTime(GAME_SECONDS); hint.textContent = '조각을 길게 눌러 드래그하면 칸에 맞춰 놓을 수 있어요.'; show('game'); timerId = setInterval(updateTimer, 100); }
 function finish(success) {
   if (!playing) return; playing = false; clearInterval(timerId);
   document.querySelector('#result-eyebrow').textContent = success ? 'PACKING COMPLETE' : 'TIME UP · TRY AGAIN';
