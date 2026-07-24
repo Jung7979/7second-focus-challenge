@@ -9,6 +9,7 @@ const spectrumContext = spectrumCanvas.getContext('2d');
 const spectrumColumns = 16, spectrumRows = 11;
 const spectrumLevels = new Float32Array(spectrumColumns * spectrumRows);
 const lifeNoiseEvents = [[.54,.76], [1.02,1], [1.38,.82], [2.08,1], [2.62,.9], [3.04,.72], [3.52,.62], [4.70,1], [5.12,.84], [5.78,.72], [6.56,1], [7.02,.94], [7.46,.76], [8.02,.58], [8.94,1], [9.42,.86], [10.02,.64], [10.76,1], [11.24,.9]];
+const whiteNoiseMixGain = Math.pow(10, -5 / 20);
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
@@ -104,6 +105,10 @@ function startWaveVisualizer() {
   const draw = () => { const time = waveAudio.currentTime; renderSpectrum((column, row) => { const longSwell = (Math.sin(time * 1.07 + column * .46 - row * .72) + 1) / 2; const nearFoam = Math.pow((Math.sin(time * 3.1 + column * .9 - row * 1.15) + 1) / 2, 1.7); return .09 + longSwell * (.12 + (row / spectrumRows) * .10) + nearFoam * .10; }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
+function playLifeNoiseLayer() {
+  songAudio.currentTime = 0; songAudio.muted = muted; songAudio.volume = 1;
+  return songAudio.play().catch(() => { document.querySelector('#play-hint').textContent = '생활소음을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
+}
 function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; spectrumLevels.fill(0); }
 function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource.layers.forEach(layer => layer.lfo.stop()); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; rainAudio.pause(); rainAudio.currentTime = 0; waveAudio.pause(); waveAudio.currentTime = 0; stopVisualizer(); }
 function stopTimer() { cancelAnimationFrame(timerFrame); }
@@ -115,20 +120,20 @@ function updateTimer() {
 }
 function beginRound(type) {
   round = type; document.querySelector('#timer-readout').classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = '7.00초';
-  const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 생활소음 모드' : `ROUND 2 OF 2 · ${soundNames[selectedSound]}`;
+  const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 생활소음 모드' : `ROUND 2 OF 2 · 생활소음 + ${soundNames[selectedSound]}`;
   document.querySelector('#sound-visual').dataset.mode = isSong ? 'music' : 'noise';
-  document.querySelector('#play-hint').textContent = isSong ? '생활소음이 들리는 동안 시간 감각에만 집중해 보세요.' : `${soundNames[selectedSound]}와 함께 같은 방식으로 7초를 맞혀 보세요.`;
+  document.querySelector('#play-hint').textContent = isSong ? '생활소음이 들리는 동안 시간 감각에만 집중해 보세요.' : `생활소음에 ${soundNames[selectedSound]}를 5dB 낮춰 섞은 환경에서 7초를 맞혀 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
   if (isSong) {
     muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = 1;
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     songAudio.play().then(startLifeNoiseVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'rain') {
-    muted = false; rainAudio.currentTime = 0; rainAudio.muted = false; rainAudio.volume = .72;
+    muted = false; rainAudio.currentTime = 0; rainAudio.muted = false; rainAudio.volume = .72 * whiteNoiseMixGain; playLifeNoiseLayer();
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     rainAudio.play().then(startRainVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '빗소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'wave') {
-    muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82;
+    muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82 * whiteNoiseMixGain; playLifeNoiseLayer();
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     waveAudio.play().then(startWaveVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '파도 소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
@@ -142,12 +147,12 @@ function formatRecord(record) { return `${record.elapsed.toFixed(2)}초`; }
 function formatDifference(record) { return `7초와 ${record.difference.toFixed(2)}초 차이`; }
 function renderResults() {
   document.querySelector('#song-record').textContent = formatRecord(records.song); document.querySelector('#song-difference').textContent = formatDifference(records.song);
-  document.querySelector('#noise-record').textContent = formatRecord(records.noise); document.querySelector('#noise-difference').textContent = formatDifference(records.noise); document.querySelector('#noise-card-label').textContent = `2차 · ${soundNames[selectedSound]}`;
+  document.querySelector('#noise-record').textContent = formatRecord(records.noise); document.querySelector('#noise-difference').textContent = formatDifference(records.noise); document.querySelector('#noise-card-label').textContent = `2차 · 생활소음 + ${soundNames[selectedSound]}`;
   const gap = Math.abs(records.noise.difference - records.song.difference);
   let comparisonCopy;
   if (gap <= .1) comparisonCopy = '두 소리에서 비슷한 기록이 나왔어요. 이 게임은 집중력을 평가하지 않는 짧은 시간 감각 체험입니다. 오늘 내게 편한 소리를 찾아보세요.';
   else if (records.song.difference < records.noise.difference) comparisonCopy = '이번 라운드에서는 생활소음 모드에서 7초에 더 가깝게 멈췄어요. 한 번의 기록은 집중력의 우열을 뜻하지 않아요. 생활소음과 백색소음 중 오늘 더 편한 환경을 찾아보세요.';
-  else comparisonCopy = `이번 라운드에서는 ${soundNames[selectedSound]}에서 7초에 더 가깝게 멈췄어요. 한 번의 기록은 집중력의 우열을 뜻하지 않아요. 오늘 내게 편한 소리 환경을 찾아보세요.`;
+  else comparisonCopy = `이번 라운드에서는 생활소음과 ${soundNames[selectedSound]}를 섞은 환경에서 7초에 더 가깝게 멈췄어요. 한 번의 기록은 집중력의 우열을 뜻하지 않아요. 오늘 내게 편한 소리 환경을 찾아보세요.`;
   document.querySelector('#comparison-copy').textContent = comparisonCopy;
   show('result');
 }
