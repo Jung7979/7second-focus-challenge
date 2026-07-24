@@ -13,6 +13,7 @@ const lifeNoiseEnvelope = [0,0.46,0.97,0.8,0.73,0.65,0.3,0.07,0.02,0,0,0,0,0,0,0
 const whiteNoiseMixGain = Math.pow(10, -5 / 20);
 // Keep the balance between sound types while lowering every playback path by 5 dB.
 const playbackMasterGain = Math.pow(10, -5 / 20);
+const lifeNoiseGain = Math.pow(10, 3 / 20);
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
@@ -122,7 +123,7 @@ function startWaveVisualizer() {
   draw();
 }
 function playLifeNoiseLayer() {
-  songAudio.currentTime = 0; songAudio.muted = muted; songAudio.volume = playbackMasterGain;
+  songAudio.currentTime = 0; songAudio.muted = muted; songAudio.volume = playbackMasterGain * lifeNoiseGain;
   return songAudio.play().catch(() => { document.querySelector('#play-hint').textContent = '생활소음을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
 }
 function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; spectrumLevels.fill(0); }
@@ -141,7 +142,7 @@ function beginRound(type) {
   document.querySelector('#play-hint').textContent = isSong ? '생활소음이 들리는 동안, 내 공간의 소리 환경을 가볍게 느껴보세요.' : `생활소음에 ${soundNames[selectedSound]}를 더한 배경 사운드 환경을 체험해 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
   if (isSong) {
-    muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = playbackMasterGain;
+    muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = playbackMasterGain * lifeNoiseGain;
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     songAudio.play().then(startLifeNoiseVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'rain') {
