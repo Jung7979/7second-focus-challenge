@@ -30,17 +30,19 @@ function applyProductImage(element, piece) {
   element.style.borderColor = 'transparent';
   element.style.boxShadow = 'none';
   element.style.filter = 'drop-shadow(0 4px 7px #183c6330)';
+  element.style.setProperty('--piece-fill', piece.color);
 }
 function puzzleOutline(piece) {
   const occupied = new Set(piece.cells.map(([x, y]) => `${x},${y}`));
   const edges = [];
+  const cells = piece.cells.map(([x, y]) => `<rect class="piece-cell" x="${x}" y="${y}" width="1" height="1" />`).join('');
   piece.cells.forEach(([x, y]) => {
     if (!occupied.has(`${x},${y - 1}`)) edges.push(`M${x} ${y}H${x + 1}`);
     if (!occupied.has(`${x + 1},${y}`)) edges.push(`M${x + 1} ${y}V${y + 1}`);
     if (!occupied.has(`${x},${y + 1}`)) edges.push(`M${x + 1} ${y + 1}H${x}`);
     if (!occupied.has(`${x - 1},${y}`)) edges.push(`M${x} ${y + 1}V${y}`);
   });
-  return `<svg class="piece-outline" viewBox="0 0 ${piece.w} ${piece.h}" preserveAspectRatio="none" aria-hidden="true"><path d="${edges.join('')}" /></svg>`;
+  return `<svg class="piece-outline" viewBox="0 0 ${piece.w} ${piece.h}" preserveAspectRatio="none" aria-hidden="true">${cells}<path d="${edges.join('')}" /></svg>`;
 }
 function createPiece(piece) {
   const element = document.createElement('button');
