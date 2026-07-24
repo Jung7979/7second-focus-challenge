@@ -29,10 +29,21 @@ function applyProductImage(element, piece) {
   element.style.boxShadow = 'none';
   element.style.filter = 'drop-shadow(0 4px 7px #183c6330)';
 }
+function puzzleOutline(piece) {
+  const occupied = new Set(piece.cells.map(([x, y]) => `${x},${y}`));
+  const edges = [];
+  piece.cells.forEach(([x, y]) => {
+    if (!occupied.has(`${x},${y - 1}`)) edges.push(`M${x} ${y}H${x + 1}`);
+    if (!occupied.has(`${x + 1},${y}`)) edges.push(`M${x + 1} ${y}V${y + 1}`);
+    if (!occupied.has(`${x},${y + 1}`)) edges.push(`M${x + 1} ${y + 1}H${x}`);
+    if (!occupied.has(`${x - 1},${y}`)) edges.push(`M${x} ${y + 1}V${y}`);
+  });
+  return `<svg class="piece-outline" viewBox="0 0 ${piece.w} ${piece.h}" preserveAspectRatio="none" aria-hidden="true"><path d="${edges.join('')}" /></svg>`;
+}
 function createPiece(piece) {
   const element = document.createElement('button');
   element.type = 'button'; element.className = 'piece'; element.dataset.id = piece.id; applyProductImage(element, piece);
-  element.innerHTML = `<span class="piece-label">${piece.name}</span>`;
+  element.innerHTML = `${puzzleOutline(piece)}<span class="piece-label">${piece.name}</span>`;
   element.addEventListener('pointerdown', beginDrag); return element;
 }
 function render() {
@@ -63,7 +74,7 @@ function canPlace(piece, x, y) {
 function beginDrag(event) {
   if (!playing) return;
   event.preventDefault(); const id = event.currentTarget.dataset.id, piece = pieces.find(item => item.id === id), previous = { ...state[id] }, preview = document.createElement('div');
-  state[id] = { x: null, y: null }; preview.className = 'drop-preview'; applyProductImage(preview, piece); preview.innerHTML = `<span class="piece-label">${piece.name}</span>`; board.append(preview);
+  state[id] = { x: null, y: null }; preview.className = 'drop-preview'; applyProductImage(preview, piece); preview.innerHTML = `${puzzleOutline(piece)}<span class="piece-label">${piece.name}</span>`; board.append(preview);
   dragging = { piece, previous, source: event.currentTarget, preview }; dragging.source.style.visibility = 'hidden'; moveDrag(event);
   document.addEventListener('pointermove', moveDrag); document.addEventListener('pointerup', endDrag, { once: true });
 }
