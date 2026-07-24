@@ -8,7 +8,8 @@ const spectrumCanvas = soundVisual.querySelector('.spectrum-canvas');
 const spectrumContext = spectrumCanvas.getContext('2d');
 const spectrumColumns = 16, spectrumRows = 11;
 const spectrumLevels = new Float32Array(spectrumColumns * spectrumRows);
-const lifeNoiseEvents = [[.54,.76], [1.02,1], [1.38,.82], [2.08,1], [2.62,.9], [3.04,.72], [3.52,.62], [4.70,1], [5.12,.84], [5.78,.72], [6.56,1], [7.02,.94], [7.46,.76], [8.02,.58], [8.94,1], [9.42,.86], [10.02,.64], [10.76,1], [11.24,.9]];
+// 0.1-second loudness envelope extracted from assets/apartment-noise-12s.mp3.
+const lifeNoiseEnvelope = [0,0.46,0.97,0.8,0.73,0.65,0.3,0.07,0.02,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.1,0.98,0.12,0.02,0.33,0.63,0.04,0.01,0,0,0,0,0,0,0,0,0,0,0.54,0.94,0.04,0.93,0.09,0.43,0.9,0.04,0.13,1,0.05,0.01,0,0.38,0.9,0.05,0.01,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.03,0.49,0.22,0.61,0.6,0.68,0.58,0.79,0.63,0.24,0.15,0.42,0.67,0.5,0.4,0.17,0.01,0,0.02,0.78,0.08,0.01,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.06,0.9,0.33,0.02,0,0];
 const whiteNoiseMixGain = Math.pow(10, -5 / 20);
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false;
 const records = { song: null, noise: null };
@@ -92,17 +93,21 @@ function startVisualizer(analyser) {
 }
 function startLifeNoiseVisualizer() {
   soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { const time = songAudio.currentTime; const eventPulse = lifeNoiseEvents.reduce((total, [at, strength]) => total + strength * Math.exp(-Math.pow((time - at) / .2, 2)), 0); renderSpectrum((column, row) => { const distance = Math.hypot(column - 7.5, row - 5); const center = Math.max(0, 1 - distance / 9); const movement = (Math.sin(time * 15 + column * 1.36 + row * .88) + Math.cos(time * 9 - column * .66 + row * 1.08)) * .13; const eventTexture = eventPulse * (.42 + center * 1.05 + ((column * 3 + row) % 4) * .11); return .16 + center * .22 + movement + eventTexture; }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { const time = songAudio.currentTime; renderSpectrum((column, row) => { const distance = Math.hypot(column - 7.5, row - 5), center = Math.max(0, 1 - distance / 9), energy = getLifeNoiseEnergy(time + (column - 7.5) * .012 + (row - 5) * .006); const texture = (Math.sin(column * 1.7 + row * .91) + 1) * .06; return .035 + energy * (.32 + center * .5 + texture); }); visualFrame = requestAnimationFrame(draw); };
   draw();
+}
+function getLifeNoiseEnergy(time) {
+  const position = Math.max(0, Math.min(lifeNoiseEnvelope.length - 1, time * 10)), index = Math.floor(position), next = Math.min(lifeNoiseEnvelope.length - 1, index + 1), amount = position - index;
+  return lifeNoiseEnvelope[index] * (1 - amount) + lifeNoiseEnvelope[next] * amount;
 }
 function startRainVisualizer() {
   soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { const time = rainAudio.currentTime; renderSpectrum((column, row) => { const passingDrop = Math.pow(Math.max(0, Math.sin(time * 9.4 + column * 1.71 + row * 2.33)), 8); const ripple = (Math.sin(time * 3.8 + column * .82 - row * 1.04) + 1) / 2; const detail = (Math.sin(time * 15.5 + column * 3.7 + row * 5.1) + 1) / 2; return .08 + ripple * .12 + detail * .06 + passingDrop * (.22 + ((column + row) % 3) * .06); }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { const time = rainAudio.currentTime, lifeEnergy = getLifeNoiseEnergy(songAudio.currentTime); renderSpectrum((column, row) => { const passingDrop = Math.pow(Math.max(0, Math.sin(time * 9.4 + column * 1.71 + row * 2.33)), 8); const ripple = (Math.sin(time * 3.8 + column * .82 - row * 1.04) + 1) / 2; const detail = (Math.sin(time * 15.5 + column * 3.7 + row * 5.1) + 1) / 2; return .06 + lifeEnergy * (.18 + ((column + row) % 4) * .035) + ripple * .12 + detail * .06 + passingDrop * (.22 + ((column + row) % 3) * .06); }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
 function startWaveVisualizer() {
   soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { const time = waveAudio.currentTime; renderSpectrum((column, row) => { const longSwell = (Math.sin(time * 1.07 + column * .46 - row * .72) + 1) / 2; const nearFoam = Math.pow((Math.sin(time * 3.1 + column * .9 - row * 1.15) + 1) / 2, 1.7); return .09 + longSwell * (.12 + (row / spectrumRows) * .10) + nearFoam * .10; }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { const time = waveAudio.currentTime, lifeEnergy = getLifeNoiseEnergy(songAudio.currentTime); renderSpectrum((column, row) => { const longSwell = (Math.sin(time * 1.07 + column * .46 - row * .72) + 1) / 2; const nearFoam = Math.pow((Math.sin(time * 3.1 + column * .9 - row * 1.15) + 1) / 2, 1.7); return .065 + lifeEnergy * (.16 + ((column + row) % 5) * .028) + longSwell * (.12 + (row / spectrumRows) * .10) + nearFoam * .10; }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
 function playLifeNoiseLayer() {
