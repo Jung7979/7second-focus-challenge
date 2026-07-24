@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="접힌 우산의 색상을 짝맞추며 여행용 접이식 우산 혜택을 확인하는 30초 게임" />
+    <title>우산 컬러 매치 | 여행용 접이식 우산</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="brand"><span class="brand-mark">☂</span><span>RAIN READY</span></header>
+      <section class="hero">
+        <p class="eyebrow">TRAVEL UMBRELLA MEMORY</p>
+        <div class="headline-row"><h1>내 우산 컬러<br /><strong>10쌍을 찾아보세요.</strong></h1><span class="timer" id="timer">0:30</span></div>
+        <p id="status" class="guide">접힌 검은 우산을 탭해 색을 확인하고, 같은 두 개를 찾아 고정하세요.</p>
+      </section>
+
+      <section class="game-card" aria-label="우산 색상 짝맞추기 게임">
+        <div class="score"><span>찾은 우산 <b id="matched">0</b> / 10쌍</span><span>선택 <b id="moves">0</b>회</span></div>
+        <div id="grid" class="umbrella-grid"></div>
+      </section>
+
+      <button id="restart" class="restart" type="button">처음부터 다시 찾기</button>
+      <p class="privacy-note">개인정보 입력 없음 · 약 30초 컬러 매치</p>
+    </main>
+
+    <section id="result" class="result" aria-live="polite" aria-hidden="true">
+      <div class="result-card">
+        <p class="eyebrow">COLOR MATCH COMPLETE</p>
+        <h2>비 오는 여행에도<br /><strong>내 컬러를 챙겼어요.</strong></h2>
+        <p>10쌍의 우산 컬러를 모두 찾았습니다. 가방에 쏙 들어가는 접이식 우산을 확인해 보세요.</p>
+        <div class="coupon"><span>완료 혜택</span><strong>접이식 우산 3,000원 할인</strong><small>수업용 예시 쿠폰 · 실제 발급·할인은 제공되지 않습니다.</small></div>
+        <a class="cta" href="https://search.shopping.naver.com/search/all?query=%EC%97%AC%ED%96%89%EC%9A%A9%20%EC%A0%91%EC%9D%B4%EC%8B%9D%20%EC%9A%B0%EC%82%B0">여행용 접이식 우산 보기 <span>→</span></a>
+        <button id="play-again" class="restart" type="button">다시 플레이</button>
+      </div>
+    </section>
+    <script src="app.js"></script>
+  </body>
+</html>
