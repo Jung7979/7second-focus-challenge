@@ -1,7 +1,7 @@
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const soundNames = { rain: '빗소리', wave: '파도 소리', brown: '브라운 노이즈' };
 const songAudio = document.querySelector('#song-audio');
-let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, lastWholeSecond = 7, comparisonStarted = false;
+let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, comparisonStarted = false;
 const records = { song: null, noise: null };
 
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
@@ -19,11 +19,11 @@ function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
   const remaining = 7 - (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
   if (remaining <= 2) timer.classList.add('is-hidden');
-  else { timer.classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = `${remaining.toFixed(2)}초`; const checkpoint = lastWholeSecond - 1; if (checkpoint >= 3 && remaining <= checkpoint + .02) { timer.classList.remove('is-pulse'); void timer.offsetWidth; timer.classList.add('is-pulse'); document.querySelector('#timer-value').textContent = `${checkpoint.toFixed(2)}초`; lastWholeSecond = checkpoint; } }
+  else { timer.classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = `${remaining.toFixed(2)}초`; }
   timerFrame = requestAnimationFrame(updateTimer);
 }
 function beginRound(type) {
-  round = type; lastWholeSecond = 7; document.querySelector('#timer-readout').classList.remove('is-hidden', 'is-pulse'); document.querySelector('#timer-value').textContent = '7.00초';
+  round = type; document.querySelector('#timer-readout').classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = '7.00초';
   const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 음악 모드' : `ROUND 2 OF 2 · ${soundNames[selectedSound]}`;
   document.querySelector('#play-hint').textContent = isSong ? '노래가 들리는 동안 시간 감각에만 집중해 보세요.' : `${soundNames[selectedSound]}와 함께 같은 방식으로 7초를 맞혀 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now();
