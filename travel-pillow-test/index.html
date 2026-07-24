@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fff7ed" />
+  <title>여행 피로도 20초 테스트 | 휴대용 목베개</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <section id="quiz" class="quiz">
+      <p class="eyebrow">TRAVEL REST CHECK</p>
+      <div class="hero-row"><div><h1>내 여행 피로,<br /><em>어디서 시작될까?</em></h1><p>4번 선택하고 나에게 맞는 이동 휴식 팁을 확인하세요.</p></div><span class="badge">20초<br />테스트</span></div>
+      <div class="pillow-art" aria-hidden="true"><span class="cloud c1"></span><span class="cloud c2"></span><div class="pillow"><i></i><b>REST</b></div><span class="spark s1">✦</span><span class="spark s2">✦</span></div>
+      <div class="progress"><i id="bar"></i></div>
+      <p id="step" class="step">QUESTION 1 / 4</p>
+      <h2 id="question"></h2>
+      <div id="answers" class="answers"></div>
+      <p class="privacy">개인정보 입력 없음 · 선택 결과는 이 화면에서만 사용됩니다.</p>
+    </section>
+
+    <section id="result" class="result" hidden>
+      <p class="eyebrow">TRAVEL REST RESULT</p>
+      <div class="result-visual"><span>✈</span><div class="pillow mini"><i></i></div></div>
+      <h1 id="resultTitle"></h1>
+      <p id="resultCopy" class="result-copy"></p>
+      <div class="tip"><span>나를 위한 이동 휴식 팁</span><strong id="tipText"></strong></div>
+      <div class="reward"><span>참여 완료 혜택</span><strong>휴대용 목베개 <em>3,000원 할인</em></strong><small>수업용 예시 쿠폰 · 실제 발급·할인은 제공되지 않습니다.</small></div>
+      <a class="cta" href="https://search.shopping.naver.com/search/all?query=%ED%9C%B4%EB%8C%80%EC%9A%A9%20%EB%AA%A9%EB%B2%A0%EA%B0%9C" target="_blank" rel="noopener">내 여행용 목베개 보기 <b>→</b></a>
+      <button id="restart" type="button">테스트 다시 하기</button>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
