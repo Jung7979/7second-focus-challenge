@@ -11,6 +11,8 @@ const spectrumLevels = new Float32Array(spectrumColumns * spectrumRows);
 // 0.1-second loudness envelope extracted from assets/apartment-noise-12s.mp3.
 const lifeNoiseEnvelope = [0,0.46,0.97,0.8,0.73,0.65,0.3,0.07,0.02,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.1,0.98,0.12,0.02,0.33,0.63,0.04,0.01,0,0,0,0,0,0,0,0,0,0,0.54,0.94,0.04,0.93,0.09,0.43,0.9,0.04,0.13,1,0.05,0.01,0,0.38,0.9,0.05,0.01,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.03,0.49,0.22,0.61,0.6,0.68,0.58,0.79,0.63,0.24,0.15,0.42,0.67,0.5,0.4,0.17,0.01,0,0.02,0.78,0.08,0.01,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.06,0.9,0.33,0.02,0,0];
 const whiteNoiseMixGain = Math.pow(10, -5 / 20);
+// Keep the balance between sound types while lowering every playback path by 5 dB.
+const playbackMasterGain = Math.pow(10, -5 / 20);
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
@@ -38,7 +40,7 @@ function createNoise(type) {
   const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
   // The layered filters lower the raw signal level; restore an audible mobile listening volume.
   // Wave keeps a small extra lift because low frequencies are less audible on phone speakers.
-  const volume = type === 'wave' ? 1.02 : .35;
+  const volume = (type === 'wave' ? 1.02 : .35) * playbackMasterGain;
   analyser.fftSize = 128; analyser.smoothingTimeConstant = .22;
   const layerSettings = type === 'wave'
     ? [[220, .30, .16, .18], [680, .20, .13, .36], [1750, .11, .08, .62]]
@@ -111,7 +113,7 @@ function startWaveVisualizer() {
   draw();
 }
 function playLifeNoiseLayer() {
-  songAudio.currentTime = 0; songAudio.muted = muted; songAudio.volume = 1;
+  songAudio.currentTime = 0; songAudio.muted = muted; songAudio.volume = playbackMasterGain;
   return songAudio.play().catch(() => { document.querySelector('#play-hint').textContent = '생활소음을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
 }
 function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; spectrumLevels.fill(0); }
@@ -130,15 +132,15 @@ function beginRound(type) {
   document.querySelector('#play-hint').textContent = isSong ? '생활소음이 들리는 동안 시간 감각에만 집중해 보세요.' : `생활소음에 ${soundNames[selectedSound]}를 5dB 낮춰 섞은 환경에서 7초를 맞혀 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
   if (isSong) {
-    muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = 1;
+    muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = playbackMasterGain;
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     songAudio.play().then(startLifeNoiseVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'rain') {
-    muted = false; rainAudio.currentTime = 0; rainAudio.muted = false; rainAudio.volume = .72 * whiteNoiseMixGain; playLifeNoiseLayer();
+    muted = false; rainAudio.currentTime = 0; rainAudio.muted = false; rainAudio.volume = .72 * whiteNoiseMixGain * playbackMasterGain; playLifeNoiseLayer();
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     rainAudio.play().then(startRainVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '빗소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else if (selectedSound === 'wave') {
-    muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82 * whiteNoiseMixGain; playLifeNoiseLayer();
+    muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82 * whiteNoiseMixGain * playbackMasterGain; playLifeNoiseLayer();
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     waveAudio.play().then(startWaveVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '파도 소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
