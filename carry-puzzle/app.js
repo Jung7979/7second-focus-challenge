@@ -13,6 +13,7 @@ const pieces = [
   { id: 'cap', name: '모자', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[1,1]], clip: 'polygon(0 0,100% 0,100% 50%,66.667% 50%,66.667% 100%,33.333% 100%,33.333% 50%,0 50%)', color: '#d9b5ed', sprite: 10 },
   { id: 'guide', name: '여행 안내서', w: 4, h: 1, cells: [[0,0],[1,0],[2,0],[3,0]], clip: 'none', color: '#b7d6a8', sprite: 11 }
 ];
+const ANSWER = { pants: [0, 0], tops: [1, 0], passport: [2, 0], hoodie: [5, 0], pouch: [2, 1], socks: [4, 2], charger: [6, 2], cap: [1, 3], shoes: [5, 3], underwear: [0, 4], tee: [2, 4], guide: [4, 5] };
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const board = document.querySelector('#board'), tray = document.querySelector('#tray'), timerValue = document.querySelector('#timer-value'), pieceCount = document.querySelector('#piece-count'), hint = document.querySelector('#game-hint');
 let state = {}, dragging = null, timerId = null, startedAt = 0, playing = false;
@@ -115,7 +116,13 @@ function updateTimer() {
   if (remaining <= 0) finish(false);
 }
 function formatTime(seconds) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`; }
-function startGame() { clearInterval(timerId); resetState(); render(); playing = true; startedAt = performance.now(); timerValue.textContent = formatTime(GAME_SECONDS); hint.textContent = '조각을 길게 눌러 드래그하면 칸에 맞춰 놓을 수 있어요.'; show('game'); timerId = setInterval(updateTimer, 100); }
+function startGame() { clearInterval(timerId); resetState(); render(); playing = true; startedAt = performance.now(); timerValue.textContent = formatTime(GAME_SECONDS); hint.textContent = '조각을 길게 눌러 드래그하면 칸에 맞춰 놓을 수 있어요.'; document.querySelector('#answer-button').textContent = '💡 모범 답안 보기'; show('game'); timerId = setInterval(updateTimer, 100); }
+function showAnswer() {
+  clearInterval(timerId); playing = false;
+  state = Object.fromEntries(pieces.map(piece => ({ [piece.id]: { x: ANSWER[piece.id][0], y: ANSWER[piece.id][1] } })));
+  render(); hint.textContent = '모범 답안입니다. 아래 “처음부터 다시 담기”를 누르면 다시 도전할 수 있어요.';
+  document.querySelector('#answer-button').textContent = '모범 답안 표시됨';
+}
 function finish(success) {
   if (!playing) return; playing = false; clearInterval(timerId);
   document.querySelector('#result-eyebrow').textContent = success ? 'PACKING COMPLETE' : 'TIME UP · TRY AGAIN';
@@ -125,5 +132,6 @@ function finish(success) {
 }
 document.querySelector('#start-button').addEventListener('click', startGame);
 document.querySelector('#restart-button').addEventListener('click', startGame);
+document.querySelector('#answer-button').addEventListener('click', showAnswer);
 document.querySelector('#play-again-button').addEventListener('click', startGame);
 resetState(); render();
