@@ -18,8 +18,8 @@ function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
   const remaining = 7 - (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
-  if (remaining < 1) timer.classList.add('is-hidden');
-  else { timer.classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = `${remaining.toFixed(2)}초`; const checkpoint = lastWholeSecond - 1; if (checkpoint >= 1 && remaining <= checkpoint + .02) { timer.classList.remove('is-pulse'); void timer.offsetWidth; timer.classList.add('is-pulse'); document.querySelector('#timer-value').textContent = `${checkpoint.toFixed(2)}초`; lastWholeSecond = checkpoint; } }
+  if (remaining <= 2) timer.classList.add('is-hidden');
+  else { timer.classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = `${remaining.toFixed(2)}초`; const checkpoint = lastWholeSecond - 1; if (checkpoint >= 3 && remaining <= checkpoint + .02) { timer.classList.remove('is-pulse'); void timer.offsetWidth; timer.classList.add('is-pulse'); document.querySelector('#timer-value').textContent = `${checkpoint.toFixed(2)}초`; lastWholeSecond = checkpoint; } }
   timerFrame = requestAnimationFrame(updateTimer);
 }
 function beginRound(type) {
