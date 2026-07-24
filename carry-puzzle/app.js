@@ -23,8 +23,10 @@ function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
   element.style.backgroundColor = 'transparent';
   element.style.backgroundImage = `url(assets/pieces-shaped/${piece.id}.png)`;
-  element.style.backgroundSize = 'contain';
+  element.style.backgroundSize = '100% 100%';
   element.style.backgroundPosition = 'center';
+  element.style.backgroundOrigin = 'border-box';
+  element.style.backgroundClip = 'border-box';
   element.style.borderColor = 'transparent';
   element.style.boxShadow = 'none';
   element.style.filter = 'drop-shadow(0 4px 7px #183c6330)';
