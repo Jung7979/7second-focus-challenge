@@ -21,7 +21,8 @@ function createNoise(type) {
     data[i] = type === 'wave' ? white * .55 + Math.sin(i / 1700) * .15 : white;
   }
   const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
-  const volume = .045;
+  // Low-frequency wave texture is perceived as quieter on mobile speakers, so compensate only this mode.
+  const volume = type === 'wave' ? .08 : .045;
   analyser.fftSize = 128; analyser.smoothingTimeConstant = .22;
   const layerSettings = type === 'wave'
     ? [[220, .30, .16, .18], [680, .20, .13, .36], [1750, .11, .08, .62]]
