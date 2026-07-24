@@ -22,8 +22,8 @@ function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id
 function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
   element.style.backgroundColor = piece.color;
-  element.style.backgroundImage = `url(assets/pieces-full/${piece.id}.jpg)`;
-  element.style.backgroundSize = 'cover';
+  element.style.backgroundImage = `url(assets/pieces-shaped/${piece.id}.png)`;
+  element.style.backgroundSize = 'contain';
   element.style.backgroundPosition = 'center';
   element.style.clipPath = piece.clip;
   element.style.webkitClipPath = piece.clip;
