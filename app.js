@@ -2,15 +2,10 @@ const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map
 const soundNames = { rain: '빗소리', wave: '파도 소리' };
 const songAudio = document.querySelector('#song-audio');
 const soundVisual = document.querySelector('#sound-visual');
-const spectrumGrid = soundVisual.querySelector('.spectrum-grid');
-const spectrumColumns = 14, spectrumRows = 9;
-const visualBars = Array.from({ length: spectrumColumns * spectrumRows }, (_, index) => {
-  const cell = document.createElement('i');
-  cell.style.setProperty('--column', index % spectrumColumns);
-  cell.style.setProperty('--row', Math.floor(index / spectrumColumns));
-  spectrumGrid.append(cell);
-  return cell;
-});
+const spectrumCanvas = soundVisual.querySelector('.spectrum-canvas');
+const spectrumContext = spectrumCanvas.getContext('2d');
+const spectrumColumns = 16, spectrumRows = 11;
+const spectrumLevels = new Float32Array(spectrumColumns * spectrumRows);
 const lifeNoiseEvents = [[.92, .52], [1.84, .9], [2.48, 1], [2.92, .64], [3.42, .48], [4.84, 1], [5.58, .86], [6.08, .62], [7.02, 1], [7.74, .56], [8.92, .88], [9.42, .58], [10.42, 1], [11.18, .55]];
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, comparisonStarted = false;
 const records = { song: null, noise: null };
@@ -30,30 +25,52 @@ function createNoise(type) {
   analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
   source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : volume; source.connect(analyser).connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser, volume };
 }
+function paintPolygon(points, fill, stroke) {
+  spectrumContext.beginPath(); spectrumContext.moveTo(...points[0]); points.slice(1).forEach(point => spectrumContext.lineTo(...point)); spectrumContext.closePath();
+  if (fill) { spectrumContext.fillStyle = fill; spectrumContext.fill(); }
+  if (stroke) { spectrumContext.strokeStyle = stroke; spectrumContext.stroke(); }
+}
 function renderSpectrum(levelAt) {
-  let peak = 0;
-  visualBars.forEach((bar, index) => {
-    const column = index % spectrumColumns, row = Math.floor(index / spectrumColumns);
-    const level = Math.max(.04, Math.min(1, levelAt(column, row)));
-    peak = Math.max(peak, level);
-    bar.style.setProperty('--elevation', `${8 + level * 148}px`);
-    bar.style.setProperty('--hue', `${218 - level * 178}`);
-    bar.style.setProperty('--light', `${31 + level * 38}%`);
-    bar.style.setProperty('--glow', `${.15 + level * .85}`);
+  const bounds = spectrumCanvas.getBoundingClientRect(), ratio = Math.min(2, window.devicePixelRatio || 1);
+  const width = Math.max(1, Math.round(bounds.width)), height = Math.max(1, Math.round(bounds.height));
+  if (spectrumCanvas.width !== width * ratio || spectrumCanvas.height !== height * ratio) { spectrumCanvas.width = width * ratio; spectrumCanvas.height = height * ratio; }
+  spectrumContext.setTransform(ratio, 0, 0, ratio, 0, 0); spectrumContext.clearRect(0, 0, width, height);
+  const isLifeNoise = soundVisual.dataset.mode === 'music';
+  const backdrop = spectrumContext.createRadialGradient(width * .5, height * .37, 8, width * .5, height * .45, width * .72);
+  backdrop.addColorStop(0, isLifeNoise ? '#5d163f' : '#0b5177'); backdrop.addColorStop(.48, isLifeNoise ? '#190c31' : '#092640'); backdrop.addColorStop(1, '#040914'); spectrumContext.fillStyle = backdrop; spectrumContext.fillRect(0, 0, width, height);
+  const tileWidth = width / (spectrumColumns + 1.5), tileHeight = tileWidth * .38, centerX = width * .5, baseY = height * .82;
+  const project = (x, y, z = 0) => [centerX + (x - y) * tileWidth * .5, baseY - (x + y) * tileHeight * .5 - z];
+  const cells = [];
+  for (let row = 0; row < spectrumRows; row++) for (let column = 0; column < spectrumColumns; column++) {
+    const index = row * spectrumColumns + column, target = Math.max(.03, Math.min(1, levelAt(column, row)));
+    spectrumLevels[index] += (target - spectrumLevels[index]) * .42;
+    cells.push({ column, row, level: spectrumLevels[index] });
+  }
+  cells.sort((a, b) => b.column + b.row - (a.column + a.row)).forEach(({ column, row, level }) => {
+    const elevation = 8 + Math.pow(level, 1.65) * height * .48;
+    const base = [project(column, row), project(column + 1, row), project(column + 1, row + 1), project(column, row + 1)];
+    const top = [project(column, row, elevation), project(column + 1, row, elevation), project(column + 1, row + 1, elevation), project(column, row + 1, elevation)];
+    const hue = 214 - level * 166, light = 29 + level * 39;
+    paintPolygon([top[2], top[3], base[3], base[2]], `hsla(${hue}, 92%, ${Math.max(17, light - 19)}%, .92)`);
+    paintPolygon([top[1], top[2], base[2], base[1]], `hsla(${hue + 9}, 95%, ${Math.max(19, light - 10)}%, .92)`);
+    spectrumContext.shadowColor = `hsla(${hue}, 100%, 62%, ${.16 + level * .6})`; spectrumContext.shadowBlur = 2 + level * 15;
+    paintPolygon(top, `hsl(${hue}, 94%, ${light}%)`, 'rgba(197,233,255,.16)'); spectrumContext.shadowBlur = 0;
   });
-  soundVisual.style.setProperty('--peak', `${58 + peak * 110}px`);
+  const grid = spectrumContext.createLinearGradient(0, height * .6, 0, height); grid.addColorStop(0, '#9edcff18'); grid.addColorStop(1, '#9edcff00'); spectrumContext.strokeStyle = grid; spectrumContext.lineWidth = 1;
+  for (let i = 0; i <= spectrumColumns; i++) { const start = project(i, 0), end = project(i, spectrumRows); spectrumContext.beginPath(); spectrumContext.moveTo(...start); spectrumContext.lineTo(...end); spectrumContext.stroke(); }
+  for (let i = 0; i <= spectrumRows; i++) { const start = project(0, i), end = project(spectrumColumns, i); spectrumContext.beginPath(); spectrumContext.moveTo(...start); spectrumContext.lineTo(...end); spectrumContext.stroke(); }
 }
 function startVisualizer(analyser) {
   activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); const now = performance.now() / 1000; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const ripple = (Math.sin(now * 8 + column * .9 - row * .65) + 1) * .09; const center = Math.max(0, 1 - Math.hypot(column - 6.5, row - 4) / 8); return .12 + audioLevel * (1.1 + center * .45) + ripple; }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); const now = performance.now() / 1000; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const wave = (Math.sin(now * 12 + column * .96 - row * .72) + 1) * .12; const center = Math.max(0, 1 - Math.hypot(column - 7.5, row - 5) / 9); return .08 + audioLevel * (2.9 + center * 1.25) + wave; }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
 function startLifeNoiseVisualizer() {
   soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { const time = songAudio.currentTime; const eventPulse = lifeNoiseEvents.reduce((total, [at, strength]) => total + strength * Math.exp(-Math.pow((time - at) / .18, 2)), 0); renderSpectrum((column, row) => { const distance = Math.hypot(column - 6.5, row - 4); const center = Math.max(0, 1 - distance / 8); const movement = (Math.sin(time * 12 + column * 1.21 + row * .73) + Math.cos(time * 7 - column * .54 + row)) * .09; const eventTexture = eventPulse * (.35 + center * .75 + ((column + row) % 3) * .08); return .2 + center * .16 + movement + eventTexture; }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { const time = songAudio.currentTime; const eventPulse = lifeNoiseEvents.reduce((total, [at, strength]) => total + strength * Math.exp(-Math.pow((time - at) / .2, 2)), 0); renderSpectrum((column, row) => { const distance = Math.hypot(column - 7.5, row - 5); const center = Math.max(0, 1 - distance / 9); const movement = (Math.sin(time * 15 + column * 1.36 + row * .88) + Math.cos(time * 9 - column * .66 + row * 1.08)) * .13; const eventTexture = eventPulse * (.42 + center * 1.05 + ((column * 3 + row) % 4) * .11); return .16 + center * .22 + movement + eventTexture; }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
-function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; soundVisual.style.removeProperty('--peak'); visualBars.forEach(bar => { bar.style.removeProperty('--elevation'); bar.style.removeProperty('--hue'); bar.style.removeProperty('--light'); bar.style.removeProperty('--glow'); }); }
+function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; spectrumLevels.fill(0); }
 function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; stopVisualizer(); }
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {

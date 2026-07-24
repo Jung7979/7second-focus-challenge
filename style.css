@@ -31,3 +31,9 @@ body .wave-area[data-live] i{animation:none!important;transition:transform .07s 
 .spectrum-3d[data-mode="music"] .spectrum-grid{filter:drop-shadow(0 0 16px #fd4f8a66)}
 .spectrum-3d[data-mode="noise"]{background:radial-gradient(ellipse at 50% 25%,#0f4d72 0%,#092543 43%,#04111e 100%)}
 @media(max-width:360px){.spectrum-3d{height:248px;border-radius:24px}.spectrum-grid{left:5%;right:5%;top:31%;bottom:-31%}.spectrum-peak{bottom:32%}}
+
+/* Canvas renderer gives the terrain visible side faces and stronger depth than CSS-only tiles. */
+.spectrum-3d{height:292px;background:#050a19;box-shadow:inset 0 1px #ffffff1c,0 18px 34px #173b7838}
+.spectrum-3d::before{z-index:2;opacity:.32}
+.spectrum-canvas{position:relative;z-index:1;display:block;width:100%;height:100%;border-radius:inherit}
+@media(max-width:360px){.spectrum-3d{height:256px}}
