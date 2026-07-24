@@ -45,11 +45,11 @@ function renderSpectrum(levelAt) {
   const cells = [];
   for (let row = 0; row < spectrumRows; row++) for (let column = 0; column < spectrumColumns; column++) {
     const index = row * spectrumColumns + column, target = Math.max(.03, Math.min(1, levelAt(column, row)));
-    spectrumLevels[index] += (target - spectrumLevels[index]) * .28;
+    spectrumLevels[index] += (target - spectrumLevels[index]) * (isLifeNoise ? .28 : .16);
     cells.push({ column, row, level: spectrumLevels[index] });
   }
   cells.sort((a, b) => b.column + b.row - (a.column + a.row)).forEach(({ column, row, level }) => {
-    const elevation = 3 + Math.pow(level, 2.1) * height * .18;
+    const elevation = isLifeNoise ? 4 + Math.pow(level, 1.7) * height * .22 : 2 + Math.pow(level, 1.35) * height * .16;
     const base = [project(column, row), project(column + 1, row), project(column + 1, row + 1), project(column, row + 1)];
     const top = [project(column, row, elevation), project(column + 1, row, elevation), project(column + 1, row + 1, elevation), project(column, row + 1, elevation)];
     const hue = 214 - level * 166, light = 29 + level * 39;
@@ -64,7 +64,7 @@ function renderSpectrum(levelAt) {
 }
 function startVisualizer(analyser) {
   activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); visualTimeData = new Uint8Array(analyser.fftSize); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length); const isWave = noiseSource?.type === 'wave', modulationTime = (audioContext.currentTime - noiseSource.startedAt) * noiseSource.lfoFrequency, modulation = (Math.sin(modulationTime * Math.PI * 2 - Math.PI / 2) + 1) / 2; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const phase = isWave ? now * 5.2 + column * .86 - row * 1.12 : now * 12.8 + column * 1.48 + row * .74; const travel = Math.pow((Math.sin(phase) + 1) / 2, isWave ? 1.5 : 3); const bandShape = isWave ? Math.max(0, 1 - Math.abs(column - row * 1.08 - 4) / 8) : ((column * 7 + row * 11) % 5) / 5; const reactive = Math.pow(audioLevel, .72) * .25 + rms * .4; const boostedMotion = modulation * (.22 + bandShape * .3); return .025 + reactive + boostedMotion + travel * (.07 + bandShape * .23) + (isWave ? Math.sin(now * 1.7) * .05 : Math.sin(now * 4.6 + row) * .08); }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length); const isWave = noiseSource?.type === 'wave', modulationTime = (audioContext.currentTime - noiseSource.startedAt) * noiseSource.lfoFrequency, modulation = (Math.sin(modulationTime * Math.PI * 2 - Math.PI / 2) + 1) / 2; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const phase = isWave ? now * 4.1 + column * .7 - row * .92 : now * 8.4 + column * 1.14 + row * .62; const travel = (Math.sin(phase) + 1) / 2; const bandShape = isWave ? Math.max(0, 1 - Math.abs(column - row * 1.02 - 4) / 8) : ((column * 7 + row * 11) % 5) / 5; const reactive = Math.pow(audioLevel, .72) * .15 + rms * .18; const gentlePulse = modulation * (.07 + bandShape * .11); const flowingSurface = travel * (.045 + bandShape * .13); return .08 + reactive + gentlePulse + flowingSurface + (isWave ? Math.sin(now * 1.1) * .025 : Math.sin(now * 2.8 + row) * .035); }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
 function startLifeNoiseVisualizer() {
