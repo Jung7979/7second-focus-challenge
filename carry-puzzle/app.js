@@ -1,4 +1,4 @@
-const COLS = 8, ROWS = 6, GAME_SECONDS = 30;
+const COLS = 8, ROWS = 6, GAME_SECONDS = 45;
 const pieces = [
   { id: 'hoodie', name: '후드', w: 3, h: 2, cells: [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]], clip: 'none', color: '#ffb34f', sprite: 0 },
   { id: 'tops', name: '티셔츠', w: 2, h: 3, cells: [[0,0],[0,1],[0,2],[1,2]], clip: 'polygon(0 0,50% 0,50% 66.667%,100% 66.667%,100% 100%,0 100%)', color: '#8fc6ff', sprite: 1 },
