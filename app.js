@@ -1,7 +1,9 @@
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const soundNames = { rain: '빗소리', wave: '파도 소리', brown: '브라운 노이즈' };
 const songAudio = document.querySelector('#song-audio');
-let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, comparisonStarted = false;
+const soundVisual = document.querySelector('#sound-visual');
+const visualBars = [...soundVisual.querySelectorAll('i')];
+let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, songSource, songGain, songAnalyser, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
@@ -11,10 +13,22 @@ function createNoise(type) {
   const buffer = audioContext.createBuffer(1, size, audioContext.sampleRate);
   const data = buffer.getChannelData(0); let last = 0;
   for (let i = 0; i < size; i++) { const white = Math.random() * 2 - 1; last = type === 'brown' ? (last + .02 * white) / 1.02 : white; data[i] = type === 'wave' ? last * .55 + Math.sin(i / 1700) * .15 : last; }
-  const source = audioContext.createBufferSource(), gain = audioContext.createGain();
-  source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : .045; source.connect(gain).connect(audioContext.destination); source.start(); return { source, gain };
+  const source = audioContext.createBufferSource(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
+  analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
+  source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : .045; source.connect(analyser).connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser };
 }
-function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; }
+function getSongAnalyser() {
+  audioContext ??= new AudioContext();
+  if (!songSource) { songSource = audioContext.createMediaElementSource(songAudio); songGain = audioContext.createGain(); songAnalyser = audioContext.createAnalyser(); songAnalyser.fftSize = 64; songAnalyser.smoothingTimeConstant = .72; songSource.connect(songGain).connect(songAnalyser).connect(audioContext.destination); }
+  return songAnalyser;
+}
+function startVisualizer(analyser) {
+  activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); visualBars.forEach((bar, index) => { const bin = Math.min(visualData.length - 1, 2 + Math.floor(index * (visualData.length - 3) / visualBars.length)); const level = visualData[bin] / 255; bar.style.height = `${34 + level * 185}px`; bar.style.transform = `translateY(${(1 - level) * 10}px)`; }); visualFrame = requestAnimationFrame(draw); };
+  draw();
+}
+function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; visualBars.forEach(bar => { bar.style.height = ''; bar.style.transform = ''; }); }
+function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; stopVisualizer(); }
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
   const remaining = 7 - (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
@@ -27,8 +41,8 @@ function beginRound(type) {
   const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 음악 모드' : `ROUND 2 OF 2 · ${soundNames[selectedSound]}`;
   document.querySelector('#sound-visual').dataset.mode = isSong ? 'music' : 'noise';
   document.querySelector('#play-hint').textContent = isSong ? '노래가 들리는 동안 시간 감각에만 집중해 보세요.' : `${soundNames[selectedSound]}와 함께 같은 방식으로 7초를 맞혀 보세요.`;
-  document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now();
-  if (isSong) { songAudio.currentTime = 0; songAudio.muted = muted; songAudio.play().catch(() => {}); } else noiseSource = createNoise(selectedSound);
+  document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
+  if (isSong) { const analyser = getSongAnalyser(); audioContext.resume(); songAudio.currentTime = 0; songGain.gain.value = muted ? 0 : 1; songAudio.play().catch(() => {}); startVisualizer(analyser); } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
   updateTimer();
 }
 function recordRound() {
@@ -57,5 +71,5 @@ document.querySelectorAll('.sound-card').forEach(card => card.addEventListener('
 document.querySelector('#song-round-button').addEventListener('click', () => beginRound('song'));
 document.querySelector('#noise-round-button').addEventListener('click', () => beginRound('noise'));
 document.querySelector('#stop-button').addEventListener('click', recordRound);
-document.querySelector('#mute-button').addEventListener('click', event => { muted = !muted; if (noiseSource) noiseSource.gain.gain.value = muted ? 0 : .045; songAudio.muted = muted; event.currentTarget.textContent = muted ? '♬ 소리 켜기' : '♬ 소리 끄기'; event.currentTarget.setAttribute('aria-pressed', muted); });
+document.querySelector('#mute-button').addEventListener('click', event => { muted = !muted; if (noiseSource) noiseSource.gain.gain.value = muted ? 0 : .045; if (songGain) songGain.gain.value = muted ? 0 : 1; event.currentTarget.textContent = muted ? '♬ 소리 켜기' : '♬ 소리 끄기'; event.currentTarget.setAttribute('aria-pressed', muted); });
 document.querySelector('#retry-button').addEventListener('click', () => { stopTimer(); stopSound(); records.song = records.noise = null; comparisonStarted = false; show('intro'); });
