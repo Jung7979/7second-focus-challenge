@@ -20,12 +20,19 @@ function createNoise(type) {
     const white = Math.random() * 2 - 1;
     data[i] = type === 'wave' ? white * .55 + Math.sin(i / 1700) * .15 : white;
   }
-  const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser(), lfo = audioContext.createOscillator(), lfoGain = audioContext.createGain();
+  const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
   const volume = .045;
-  analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
-  const lfoFrequency = type === 'wave' ? .72 : 1.85;
-  source.buffer = buffer; source.loop = true; textureGain.gain.value = type === 'wave' ? .62 : .55; lfo.frequency.value = lfoFrequency; lfoGain.gain.value = type === 'wave' ? .28 : .38;
-  gain.gain.value = muted ? 0 : volume; source.connect(textureGain).connect(analyser).connect(gain).connect(audioContext.destination); lfo.connect(lfoGain).connect(textureGain.gain); source.start(); lfo.start(); return { source, gain, analyser, lfo, volume, type, lfoFrequency, startedAt: audioContext.currentTime };
+  analyser.fftSize = 128; analyser.smoothingTimeConstant = .22;
+  const layerSettings = type === 'wave'
+    ? [[220, .30, .16, .18], [680, .20, .13, .36], [1750, .11, .08, .62]]
+    : [[430, .24, .11, 1.05], [1320, .21, .16, 1.72], [3300, .16, .13, 2.45]];
+  const layers = layerSettings.map(([frequency, base, depth, lfoFrequency]) => {
+    const filter = audioContext.createBiquadFilter(), layerGain = audioContext.createGain(), lfo = audioContext.createOscillator(), lfoGain = audioContext.createGain();
+    filter.type = 'bandpass'; filter.frequency.value = frequency; filter.Q.value = 1.15; layerGain.gain.value = base; lfo.frequency.value = lfoFrequency; lfoGain.gain.value = depth;
+    textureGain.connect(filter).connect(layerGain).connect(analyser); lfo.connect(lfoGain).connect(layerGain.gain); lfo.start(); return { lfo, lfoFrequency, depth };
+  });
+  source.buffer = buffer; source.loop = true; textureGain.gain.value = type === 'wave' ? .86 : .96;
+  gain.gain.value = muted ? 0 : volume; source.connect(textureGain); analyser.connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser, layers, volume, type, startedAt: audioContext.currentTime };
 }
 function paintPolygon(points, fill, stroke) {
   spectrumContext.beginPath(); spectrumContext.moveTo(...points[0]); points.slice(1).forEach(point => spectrumContext.lineTo(...point)); spectrumContext.closePath();
@@ -64,7 +71,7 @@ function renderSpectrum(levelAt) {
 }
 function startVisualizer(analyser) {
   activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); visualTimeData = new Uint8Array(analyser.fftSize); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length); const isWave = noiseSource?.type === 'wave', modulationTime = (audioContext.currentTime - noiseSource.startedAt) * noiseSource.lfoFrequency, modulation = (Math.sin(modulationTime * Math.PI * 2 - Math.PI / 2) + 1) / 2; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const phase = isWave ? now * 4.1 + column * .7 - row * .92 : now * 8.4 + column * 1.14 + row * .62; const travel = (Math.sin(phase) + 1) / 2; const bandShape = isWave ? Math.max(0, 1 - Math.abs(column - row * 1.02 - 4) / 8) : ((column * 7 + row * 11) % 5) / 5; const reactive = Math.pow(audioLevel, .72) * .15 + rms * .18; const gentlePulse = modulation * (.07 + bandShape * .11); const flowingSurface = travel * (.045 + bandShape * .13); return .08 + reactive + gentlePulse + flowingSurface + (isWave ? Math.sin(now * 1.1) * .025 : Math.sin(now * 2.8 + row) * .035); }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, elapsed = audioContext.currentTime - noiseSource.startedAt, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length), average = visualData.reduce((sum, value) => sum + value, 0) / visualData.length / 255; const isWave = noiseSource?.type === 'wave'; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255, relativeBand = Math.max(0, Math.min(1, .5 + (audioLevel - average) * 2.6)); const layer = noiseSource.layers[(column + row * 2) % noiseSource.layers.length], layerPulse = (Math.sin(elapsed * layer.lfoFrequency * Math.PI * 2) + 1) / 2; const phase = isWave ? now * 3.1 + column * .72 - row * .88 : now * 5.6 + column * 1.1 + row * .74; const surfaceWave = (Math.sin(phase) + 1) / 2; const bandShape = isWave ? Math.max(.12, 1 - Math.abs(column - row * 1.02 - 4) / 9) : .25 + ((column * 7 + row * 11) % 5) / 6; const reactive = relativeBand * .17 + rms * .10; const matchedMotion = layerPulse * (.075 + layer.depth * .45) * bandShape; return .075 + reactive + matchedMotion + surfaceWave * (.035 + bandShape * .085); }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
 function startLifeNoiseVisualizer() {
@@ -73,7 +80,7 @@ function startLifeNoiseVisualizer() {
   draw();
 }
 function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; spectrumLevels.fill(0); }
-function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource.lfo.stop(); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; stopVisualizer(); }
+function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource.layers.forEach(layer => layer.lfo.stop()); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; stopVisualizer(); }
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
   const remaining = 7 - (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
