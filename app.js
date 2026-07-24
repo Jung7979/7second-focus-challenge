@@ -7,7 +7,7 @@ const spectrumContext = spectrumCanvas.getContext('2d');
 const spectrumColumns = 16, spectrumRows = 11;
 const spectrumLevels = new Float32Array(spectrumColumns * spectrumRows);
 const lifeNoiseEvents = [[.92, .52], [1.84, .9], [2.48, 1], [2.92, .64], [3.42, .48], [4.84, 1], [5.58, .86], [6.08, .62], [7.02, 1], [7.74, .56], [8.92, .88], [9.42, .58], [10.42, 1], [11.18, .55]];
-let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, comparisonStarted = false;
+let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
@@ -20,10 +20,11 @@ function createNoise(type) {
     const white = Math.random() * 2 - 1;
     data[i] = type === 'wave' ? white * .55 + Math.sin(i / 1700) * .15 : white;
   }
-  const source = audioContext.createBufferSource(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
+  const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser(), lfo = audioContext.createOscillator(), lfoGain = audioContext.createGain();
   const volume = .045;
   analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
-  source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : volume; source.connect(analyser).connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser, volume };
+  source.buffer = buffer; source.loop = true; textureGain.gain.value = type === 'wave' ? .62 : .55; lfo.frequency.value = type === 'wave' ? .34 : 1.35; lfoGain.gain.value = type === 'wave' ? .28 : .38;
+  gain.gain.value = muted ? 0 : volume; source.connect(textureGain).connect(analyser).connect(gain).connect(audioContext.destination); lfo.connect(lfoGain).connect(textureGain.gain); source.start(); lfo.start(); return { source, gain, analyser, lfo, volume, type };
 }
 function paintPolygon(points, fill, stroke) {
   spectrumContext.beginPath(); spectrumContext.moveTo(...points[0]); points.slice(1).forEach(point => spectrumContext.lineTo(...point)); spectrumContext.closePath();
@@ -43,11 +44,11 @@ function renderSpectrum(levelAt) {
   const cells = [];
   for (let row = 0; row < spectrumRows; row++) for (let column = 0; column < spectrumColumns; column++) {
     const index = row * spectrumColumns + column, target = Math.max(.03, Math.min(1, levelAt(column, row)));
-    spectrumLevels[index] += (target - spectrumLevels[index]) * .42;
+    spectrumLevels[index] += (target - spectrumLevels[index]) * .28;
     cells.push({ column, row, level: spectrumLevels[index] });
   }
   cells.sort((a, b) => b.column + b.row - (a.column + a.row)).forEach(({ column, row, level }) => {
-    const elevation = 8 + Math.pow(level, 1.65) * height * .48;
+    const elevation = 5 + Math.pow(level, 1.85) * height * .31;
     const base = [project(column, row), project(column + 1, row), project(column + 1, row + 1), project(column, row + 1)];
     const top = [project(column, row, elevation), project(column + 1, row, elevation), project(column + 1, row + 1, elevation), project(column, row + 1, elevation)];
     const hue = 214 - level * 166, light = 29 + level * 39;
@@ -61,8 +62,8 @@ function renderSpectrum(levelAt) {
   for (let i = 0; i <= spectrumRows; i++) { const start = project(0, i), end = project(spectrumColumns, i); spectrumContext.beginPath(); spectrumContext.moveTo(...start); spectrumContext.lineTo(...end); spectrumContext.stroke(); }
 }
 function startVisualizer(analyser) {
-  activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); const now = performance.now() / 1000; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const wave = (Math.sin(now * 12 + column * .96 - row * .72) + 1) * .12; const center = Math.max(0, 1 - Math.hypot(column - 7.5, row - 5) / 9); return .08 + audioLevel * (2.9 + center * 1.25) + wave; }); visualFrame = requestAnimationFrame(draw); };
+  activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); visualTimeData = new Uint8Array(analyser.fftSize); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length); const isWave = noiseSource?.type === 'wave'; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const phase = isWave ? now * 5.2 + column * .86 - row * 1.12 : now * 12.8 + column * 1.48 + row * .74; const travel = Math.pow((Math.sin(phase) + 1) / 2, isWave ? 1.5 : 3); const bandShape = isWave ? Math.max(0, 1 - Math.abs(column - row * 1.08 - 4) / 8) : ((column * 7 + row * 11) % 5) / 5; const reactive = Math.pow(audioLevel, .72) * .36 + rms * .7; return .035 + reactive + travel * (.08 + bandShape * .29) + (isWave ? Math.sin(now * 1.7) * .06 : Math.sin(now * 4.6 + row) * .09); }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
 function startLifeNoiseVisualizer() {
@@ -71,7 +72,7 @@ function startLifeNoiseVisualizer() {
   draw();
 }
 function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; spectrumLevels.fill(0); }
-function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; stopVisualizer(); }
+function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource.lfo.stop(); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; stopVisualizer(); }
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
   const remaining = 7 - (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
