@@ -76,7 +76,7 @@ function renderSpectrum(levelAt) {
     cells.push({ column, row, level: spectrumLevels[index] });
   }
   cells.sort((a, b) => b.column + b.row - (a.column + a.row)).forEach(({ column, row, level }) => {
-    const elevation = isLifeNoise ? 4 + Math.pow(level, 1.7) * height * .28 : 2 + Math.pow(level, 1.35) * height * .20;
+    const elevation = isLifeNoise ? 4 + Math.pow(level, 1.7) * height * .42 : 2 + Math.pow(level, 1.35) * height * .30;
     const base = [project(column, row), project(column + 1, row), project(column + 1, row + 1), project(column, row + 1)];
     const top = [project(column, row, elevation), project(column + 1, row, elevation), project(column + 1, row + 1, elevation), project(column, row + 1, elevation)];
     const hue = 214 - level * 166, light = 29 + level * 39;
