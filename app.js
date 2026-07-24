@@ -8,7 +8,7 @@ const spectrumCanvas = soundVisual.querySelector('.spectrum-canvas');
 const spectrumContext = spectrumCanvas.getContext('2d');
 const spectrumColumns = 16, spectrumRows = 11;
 const spectrumLevels = new Float32Array(spectrumColumns * spectrumRows);
-const lifeNoiseEvents = [[.92, .52], [1.84, .9], [2.48, 1], [2.92, .64], [3.42, .48], [4.84, 1], [5.58, .86], [6.08, .62], [7.02, 1], [7.74, .56], [8.92, .88], [9.42, .58], [10.42, 1], [11.18, .55]];
+const lifeNoiseEvents = [[.55, .5], [1.18, .56], [2.48, .72], [3.20, .5], [4.06, .58], [5.78, .5], [6.38, .72], [6.98, .56], [8.04, .52], [8.70, .55], [9.16, .72], [10.82, .56], [11.22, .5]];
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
