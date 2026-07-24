@@ -1,5 +1,5 @@
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
-const soundNames = { rain: '빗소리', wave: '파도 소리', pink: '핑크 노이즈' };
+const soundNames = { rain: '빗소리', wave: '파도 소리', mask: '생활소음 마스킹 노이즈' };
 const songAudio = document.querySelector('#song-audio');
 const rainAudio = document.querySelector('#rain-audio');
 const waveAudio = document.querySelector('#wave-audio');
@@ -20,17 +20,18 @@ const records = { song: null, noise: null };
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
 function createNoise(type) {
   audioContext ??= new AudioContext();
-  const size = audioContext.sampleRate * (type === 'rain' ? 6 : type === 'pink' ? 5 : 2);
+  const size = audioContext.sampleRate * (type === 'rain' ? 6 : type === 'mask' ? 5 : 2);
   const buffer = audioContext.createBuffer(1, size, audioContext.sampleRate);
   const data = buffer.getChannelData(0);
   let rainBed = 0, pinkB0 = 0, pinkB1 = 0, pinkB2 = 0, pinkB3 = 0, pinkB4 = 0, pinkB5 = 0, pinkB6 = 0;
   for (let i = 0; i < size; i++) {
     const white = Math.random() * 2 - 1;
     if (type === 'wave') data[i] = white * .55 + Math.sin(i / 1700) * .15;
-    else if (type === 'pink') {
+    else if (type === 'mask') {
       pinkB0 = .99886 * pinkB0 + white * .0555179; pinkB1 = .99332 * pinkB1 + white * .0750759; pinkB2 = .96900 * pinkB2 + white * .1538520;
       pinkB3 = .86650 * pinkB3 + white * .3104856; pinkB4 = .55000 * pinkB4 + white * .5329522; pinkB5 = -.7616 * pinkB5 - white * .0168980;
-      data[i] = (pinkB0 + pinkB1 + pinkB2 + pinkB3 + pinkB4 + pinkB5 + pinkB6 + white * .5362) * .11;
+      const pink = (pinkB0 + pinkB1 + pinkB2 + pinkB3 + pinkB4 + pinkB5 + pinkB6 + white * .5362) * .11;
+      data[i] = pink * .76 + white * .12;
       pinkB6 = white * .115926;
     }
     else { rainBed = rainBed * .985 + white * .015; data[i] = rainBed * .7 + white * .13; }
@@ -47,19 +48,19 @@ function createNoise(type) {
   const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser();
   // The layered filters lower the raw signal level; restore an audible mobile listening volume.
   // Wave keeps a small extra lift because low frequencies are less audible on phone speakers.
-  const volume = (type === 'wave' ? 1.02 : type === 'pink' ? .88 * whiteNoiseMixGain : .35) * playbackMasterGain;
+  const volume = (type === 'wave' ? 1.02 : type === 'mask' ? .96 : .35) * playbackMasterGain;
   analyser.fftSize = 128; analyser.smoothingTimeConstant = .22;
   const layerSettings = type === 'wave'
     ? [[220, .30, .16, .18], [680, .20, .13, .36], [1750, .11, .08, .62]]
-    : type === 'pink'
-      ? [[140, .34, .10, .18], [520, .28, .08, .33], [1550, .16, .06, .56]]
+    : type === 'mask'
+      ? [[180, .42, .10, .18], [620, .36, .08, .33], [1700, .24, .06, .56], [3900, .12, .05, .88]]
     : [[620, .14, .06, .72], [1900, .20, .09, 1.34], [4800, .25, .11, 2.18]];
   const layers = layerSettings.map(([frequency, base, depth, lfoFrequency]) => {
     const filter = audioContext.createBiquadFilter(), layerGain = audioContext.createGain(), lfo = audioContext.createOscillator(), lfoGain = audioContext.createGain();
     filter.type = 'bandpass'; filter.frequency.value = frequency; filter.Q.value = 1.15; layerGain.gain.value = base; lfo.frequency.value = lfoFrequency; lfoGain.gain.value = depth;
     textureGain.connect(filter).connect(layerGain).connect(analyser); lfo.connect(lfoGain).connect(layerGain.gain); lfo.start(); return { lfo, lfoFrequency, depth };
   });
-  source.buffer = buffer; source.loop = true; textureGain.gain.value = type === 'wave' ? .86 : type === 'pink' ? .93 : .96;
+  source.buffer = buffer; source.loop = true; textureGain.gain.value = type === 'wave' ? .86 : type === 'mask' ? .98 : .96;
   gain.gain.value = muted ? 0 : volume; source.connect(textureGain); analyser.connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser, layers, volume, type, startedAt: audioContext.currentTime };
 }
 function paintPolygon(points, fill, stroke) {
@@ -99,7 +100,7 @@ function renderSpectrum(levelAt) {
 }
 function startVisualizer(analyser) {
   activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); visualTimeData = new Uint8Array(analyser.fftSize); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, elapsed = audioContext.currentTime - noiseSource.startedAt, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length), average = visualData.reduce((sum, value) => sum + value, 0) / visualData.length / 255; const isWave = noiseSource?.type === 'wave', isPink = noiseSource?.type === 'pink', lifeEnergy = isPink ? getLifeNoiseEnergy(songAudio.currentTime) : 0; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255, relativeBand = Math.max(0, Math.min(1, .5 + (audioLevel - average) * 2.6)); const layer = noiseSource.layers[(column + row * 2) % noiseSource.layers.length], layerPulse = (Math.sin(elapsed * layer.lfoFrequency * Math.PI * 2) + 1) / 2; const phase = isWave ? now * 3.1 + column * .72 - row * .88 : isPink ? now * 2.1 + column * .54 - row * .63 : now * 5.6 + column * 1.1 + row * .74; const surfaceWave = (Math.sin(phase) + 1) / 2; const bandShape = isWave ? Math.max(.12, 1 - Math.abs(column - row * 1.02 - 4) / 9) : isPink ? .48 + ((column * 3 + row * 5) % 4) / 10 : .25 + ((column * 7 + row * 11) % 5) / 6; const reactive = relativeBand * .17 + rms * .10; const matchedMotion = layerPulse * (.075 + layer.depth * .45) * bandShape; return .075 + reactive + matchedMotion + surfaceWave * (.035 + bandShape * .085) + lifeEnergy * (isPink ? .24 : 0); }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, elapsed = audioContext.currentTime - noiseSource.startedAt, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length), average = visualData.reduce((sum, value) => sum + value, 0) / visualData.length / 255; const isWave = noiseSource?.type === 'wave', isMask = noiseSource?.type === 'mask', lifeEnergy = isMask ? getLifeNoiseEnergy(songAudio.currentTime) : 0; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255, relativeBand = Math.max(0, Math.min(1, .5 + (audioLevel - average) * 2.6)); const layer = noiseSource.layers[(column + row * 2) % noiseSource.layers.length], layerPulse = (Math.sin(elapsed * layer.lfoFrequency * Math.PI * 2) + 1) / 2; const phase = isWave ? now * 3.1 + column * .72 - row * .88 : isMask ? now * 2.35 + column * .54 - row * .63 : now * 5.6 + column * 1.1 + row * .74; const surfaceWave = (Math.sin(phase) + 1) / 2; const bandShape = isWave ? Math.max(.12, 1 - Math.abs(column - row * 1.02 - 4) / 9) : isMask ? .52 + ((column * 3 + row * 5) % 4) / 10 : .25 + ((column * 7 + row * 11) % 5) / 6; const reactive = relativeBand * .17 + rms * .10; const matchedMotion = layerPulse * (.075 + layer.depth * .45) * bandShape; return .075 + reactive + matchedMotion + surfaceWave * (.035 + bandShape * .085) + lifeEnergy * (isMask ? .24 : 0); }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
 function startLifeNoiseVisualizer() {
@@ -152,8 +153,8 @@ function beginRound(type) {
     muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82 * whiteNoiseMixGain * playbackMasterGain; playLifeNoiseLayer(mixedLifeNoiseGain);
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     waveAudio.play().then(startWaveVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '파도 소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
-  } else if (selectedSound === 'pink') {
-    muted = false; noiseSource = createNoise('pink'); audioContext.resume(); playLifeNoiseLayer(mixedLifeNoiseGain);
+  } else if (selectedSound === 'mask') {
+    muted = false; noiseSource = createNoise('mask'); audioContext.resume(); playLifeNoiseLayer(mixedLifeNoiseGain);
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     startVisualizer(noiseSource.analyser);
   } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
