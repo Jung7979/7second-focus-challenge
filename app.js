@@ -1,7 +1,7 @@
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
 const soundNames = { rain: '빗소리', wave: '파도 소리', brown: '브라운 노이즈' };
 const songAudio = document.querySelector('#song-audio');
-let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, lastWholeSecond = 7;
+let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, lastWholeSecond = 7, comparisonStarted = false;
 const records = { song: null, noise: null };
 
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
@@ -43,10 +43,14 @@ function renderResults() {
   document.querySelector('#comparison-copy').textContent = better ? `${soundNames[selectedSound]}에서 7초에 더 가깝게 멈췄어요. 내게 편한 소리 환경을 찾아보세요.` : `두 결과가 달라도 괜찮아요. 상황에 따라 내게 편한 소리 환경을 찾아보세요.`;
   show('result');
 }
-document.querySelectorAll('.sound-card').forEach(card => card.addEventListener('change', () => document.querySelectorAll('.sound-card').forEach(item => item.classList.toggle('selected', item.contains(document.querySelector('input:checked'))))));
-document.querySelector('#start-button').addEventListener('click', () => { selectedSound = document.querySelector('input[name="sound"]:checked').value; show('song-setup'); });
+document.querySelectorAll('.sound-card').forEach(card => card.addEventListener('click', () => {
+  if (comparisonStarted) return;
+  comparisonStarted = true; selectedSound = card.querySelector('input').value;
+  document.querySelectorAll('.sound-card').forEach(item => item.classList.toggle('selected', item === card));
+  beginRound('song');
+}));
 document.querySelector('#song-round-button').addEventListener('click', () => beginRound('song'));
 document.querySelector('#noise-round-button').addEventListener('click', () => beginRound('noise'));
 document.querySelector('#stop-button').addEventListener('click', recordRound);
 document.querySelector('#mute-button').addEventListener('click', event => { muted = !muted; if (noiseSource) noiseSource.gain.gain.value = muted ? 0 : .045; songAudio.muted = muted; event.currentTarget.textContent = muted ? '♬ 소리 켜기' : '♬ 소리 끄기'; event.currentTarget.setAttribute('aria-pressed', muted); });
-document.querySelector('#retry-button').addEventListener('click', () => { stopTimer(); stopSound(); records.song = records.noise = null; show('intro'); });
+document.querySelector('#retry-button').addEventListener('click', () => { stopTimer(); stopSound(); records.song = records.noise = null; comparisonStarted = false; show('intro'); });
