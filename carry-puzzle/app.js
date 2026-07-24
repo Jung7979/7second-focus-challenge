@@ -50,16 +50,23 @@ function canPlace(piece, x, y) {
 }
 function beginDrag(event) {
   if (!playing) return;
-  event.preventDefault(); const id = event.currentTarget.dataset.id, piece = pieces.find(item => item.id === id), previous = { ...state[id] }, boardRect = board.getBoundingClientRect(), dragWidth = boardRect.width / COLS * piece.w, dragHeight = boardRect.height / ROWS * piece.h;
-  state[id] = { x: null, y: null }; dragging = { piece, previous, element: event.currentTarget, offsetX: dragWidth / 2, offsetY: dragHeight / 2 };
-  document.body.append(dragging.element); dragging.element.classList.add('dragging'); dragging.element.style.width = `${dragWidth}px`; dragging.element.style.height = `${dragHeight}px`; moveDrag(event);
+  event.preventDefault(); const id = event.currentTarget.dataset.id, piece = pieces.find(item => item.id === id), previous = { ...state[id] }, preview = document.createElement('div');
+  state[id] = { x: null, y: null }; preview.className = 'drop-preview'; preview.style.background = piece.color; preview.innerHTML = `<span>${piece.icon}</span><span>${piece.name}</span>`; board.append(preview);
+  dragging = { piece, previous, source: event.currentTarget, preview }; dragging.source.style.visibility = 'hidden'; moveDrag(event);
   document.addEventListener('pointermove', moveDrag); document.addEventListener('pointerup', endDrag, { once: true });
 }
-function moveDrag(event) { if (!dragging) return; dragging.element.style.left = `${event.clientX - dragging.offsetX}px`; dragging.element.style.top = `${event.clientY - dragging.offsetY}px`; }
+function getDropPoint(event, piece) {
+  const boardRect = board.getBoundingClientRect(), cellWidth = boardRect.width / COLS, cellHeight = boardRect.height / ROWS;
+  return { x: Math.round((event.clientX - boardRect.left - piece.w * cellWidth / 2) / cellWidth), y: Math.round((event.clientY - boardRect.top - piece.h * cellHeight / 2) / cellHeight), boardRect, cellWidth, cellHeight };
+}
+function moveDrag(event) {
+  if (!dragging) return; const { x, y, boardRect, cellWidth, cellHeight } = getDropPoint(event, dragging.piece), inside = event.clientX >= boardRect.left && event.clientX <= boardRect.right && event.clientY >= boardRect.top && event.clientY <= boardRect.bottom;
+  dragging.preview.hidden = !inside; dragging.preview.classList.toggle('invalid', !canPlace(dragging.piece, x, y));
+  dragging.preview.style.width = `${dragging.piece.w * cellWidth}px`; dragging.preview.style.height = `${dragging.piece.h * cellHeight}px`; dragging.preview.style.left = `${Math.max(0, Math.min(COLS - dragging.piece.w, x)) * cellWidth}px`; dragging.preview.style.top = `${Math.max(0, Math.min(ROWS - dragging.piece.h, y)) * cellHeight}px`;
+}
 function endDrag(event) {
   document.removeEventListener('pointermove', moveDrag); if (!dragging) return;
-  const boardRect = board.getBoundingClientRect(), cellWidth = boardRect.width / COLS, cellHeight = boardRect.height / ROWS;
-  const x = Math.round((event.clientX - boardRect.left - dragging.piece.w * cellWidth / 2) / cellWidth), y = Math.round((event.clientY - boardRect.top - dragging.piece.h * cellHeight / 2) / cellHeight);
+  const { x, y } = getDropPoint(event, dragging.piece); dragging.source.style.visibility = ''; dragging.preview.remove();
   if (canPlace(dragging.piece, x, y)) { state[dragging.piece.id] = { x, y }; hint.textContent = '좋아요! 남은 짐도 빈칸 없이 채워보세요.'; }
   else { state[dragging.piece.id] = dragging.previous; hint.textContent = '겹치거나 밖으로 나갔어요. 빈칸에 맞춰 다시 놓아보세요.'; }
   dragging = null; render(); if (pieces.every(isPlaced)) finish(true);
