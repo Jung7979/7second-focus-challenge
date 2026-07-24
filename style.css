@@ -18,3 +18,16 @@ body .wave-area[data-live] i{animation:none!important;transition:transform .07s 
 @keyframes radial-flow{0%,100%{transform:rotate(var(--angle)) translateY(-88px) scaleY(.68);opacity:.65}50%{transform:rotate(var(--angle)) translateY(-110px) scaleY(1.08);opacity:1}}
 @keyframes radial-alert{0%,100%{transform:rotate(var(--angle)) translateY(-86px) scaleY(.65);opacity:.62}48%{transform:rotate(var(--angle)) translateY(-124px) scaleY(1.25);opacity:1}66%{transform:rotate(var(--angle)) translateY(-99px) scaleY(.82);opacity:.8}}
 @media(max-width:360px){body .wave-area[data-mode]{width:min(100%,236px)}.spectrum-core{width:66px;height:66px}}
+
+/* Perspective terrain spectrum: a compact 3D sound field for mobile play. */
+.spectrum-3d{--peak:80px;position:relative;width:min(100%,360px);height:285px;margin:8px auto 0;overflow:hidden;border-radius:28px;perspective:520px;background:radial-gradient(ellipse at 50% 28%,#183b7c 0%,#0a1738 43%,#050a19 100%);box-shadow:inset 0 1px #ffffff1c,0 18px 34px #173b7828}
+.spectrum-3d::before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,#ffffff08,transparent 33%),repeating-linear-gradient(90deg,transparent 0 27px,#9bd6ff0b 28px),repeating-linear-gradient(0deg,transparent 0 27px,#9bd6ff09 28px);mask-image:linear-gradient(to bottom,#0009,#000 42%,transparent);pointer-events:none}
+.spectrum-grid{position:absolute;left:8%;right:8%;top:30%;bottom:-28%;display:grid;grid-template-columns:repeat(14,1fr);grid-template-rows:repeat(9,1fr);gap:2px;transform:rotateX(62deg) rotateZ(-3deg);transform-style:preserve-3d;transform-origin:50% 58%;filter:drop-shadow(0 0 16px #176bff55)}
+.spectrum-grid i{position:relative;display:block;min-width:0;min-height:0;background:hsl(var(--hue,210) 90% var(--light,48%));box-shadow:0 0 calc(3px + var(--glow,.3)*11px) hsl(var(--hue,210) 100% 62% / var(--glow,.4));transform:translateZ(var(--elevation,14px));transform-style:preserve-3d;transition:transform .07s linear,background .07s linear,box-shadow .07s linear}
+.spectrum-grid i::before{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--elevation,14px);transform-origin:bottom;transform:rotateX(90deg);background:linear-gradient(90deg,hsl(var(--hue,210) 90% 20% / .7),hsl(var(--hue,210) 90% 48% / .35));opacity:.82}
+.spectrum-grid i::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,#ffffff55,transparent 44%);mix-blend-mode:screen}
+.spectrum-peak{position:absolute;left:50%;bottom:34%;width:30px;height:var(--peak);transform:translateX(-50%) perspective(180px) rotateX(8deg);transform-origin:50% 100%;clip-path:polygon(50% 0,76% 83%,100% 100%,0 100%,24% 83%);background:linear-gradient(to top,#ff3d42 0%,#ff8b36 35%,#ffe85d 58%,#f9ffff 82%,#fff 100%);filter:drop-shadow(0 0 6px #ff6048) drop-shadow(0 0 20px #ff422c99);opacity:.88;transition:height .07s linear;z-index:4}
+.spectrum-3d[data-mode="music"]{background:radial-gradient(ellipse at 50% 27%,#61264d 0%,#210d37 43%,#090614 100%)}
+.spectrum-3d[data-mode="music"] .spectrum-grid{filter:drop-shadow(0 0 16px #fd4f8a66)}
+.spectrum-3d[data-mode="noise"]{background:radial-gradient(ellipse at 50% 25%,#0f4d72 0%,#092543 43%,#04111e 100%)}
+@media(max-width:360px){.spectrum-3d{height:248px;border-radius:24px}.spectrum-grid{left:5%;right:5%;top:31%;bottom:-31%}.spectrum-peak{bottom:32%}}

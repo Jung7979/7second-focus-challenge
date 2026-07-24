@@ -2,8 +2,16 @@ const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map
 const soundNames = { rain: '빗소리', wave: '파도 소리' };
 const songAudio = document.querySelector('#song-audio');
 const soundVisual = document.querySelector('#sound-visual');
-const visualBars = [...soundVisual.querySelectorAll('i')];
-visualBars.forEach((bar, index) => bar.style.setProperty('--angle', `${index * (360 / visualBars.length)}deg`));
+const spectrumGrid = soundVisual.querySelector('.spectrum-grid');
+const spectrumColumns = 14, spectrumRows = 9;
+const visualBars = Array.from({ length: spectrumColumns * spectrumRows }, (_, index) => {
+  const cell = document.createElement('i');
+  cell.style.setProperty('--column', index % spectrumColumns);
+  cell.style.setProperty('--row', Math.floor(index / spectrumColumns));
+  spectrumGrid.append(cell);
+  return cell;
+});
+const lifeNoiseEvents = [[.92, .52], [1.84, .9], [2.48, 1], [2.92, .64], [3.42, .48], [4.84, 1], [5.58, .86], [6.08, .62], [7.02, 1], [7.74, .56], [8.92, .88], [9.42, .58], [10.42, 1], [11.18, .55]];
 let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
@@ -22,12 +30,30 @@ function createNoise(type) {
   analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
   source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : volume; source.connect(analyser).connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser, volume };
 }
+function renderSpectrum(levelAt) {
+  let peak = 0;
+  visualBars.forEach((bar, index) => {
+    const column = index % spectrumColumns, row = Math.floor(index / spectrumColumns);
+    const level = Math.max(.04, Math.min(1, levelAt(column, row)));
+    peak = Math.max(peak, level);
+    bar.style.setProperty('--elevation', `${8 + level * 148}px`);
+    bar.style.setProperty('--hue', `${218 - level * 178}`);
+    bar.style.setProperty('--light', `${31 + level * 38}%`);
+    bar.style.setProperty('--glow', `${.15 + level * .85}`);
+  });
+  soundVisual.style.setProperty('--peak', `${58 + peak * 110}px`);
+}
 function startVisualizer(analyser) {
   activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); visualBars.forEach((bar, index) => { const bin = Math.min(visualData.length - 1, 2 + Math.floor(index * (visualData.length - 3) / visualBars.length)); const level = visualData[bin] / 255; bar.style.setProperty('--offset', `-${78 + level * 52}px`); bar.style.setProperty('--scale', `${.55 + level * 1.25}`); }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); const now = performance.now() / 1000; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const ripple = (Math.sin(now * 8 + column * .9 - row * .65) + 1) * .09; const center = Math.max(0, 1 - Math.hypot(column - 6.5, row - 4) / 8); return .12 + audioLevel * (1.1 + center * .45) + ripple; }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
-function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; visualBars.forEach(bar => { bar.style.removeProperty('--offset'); bar.style.removeProperty('--scale'); }); }
+function startLifeNoiseVisualizer() {
+  soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
+  const draw = () => { const time = songAudio.currentTime; const eventPulse = lifeNoiseEvents.reduce((total, [at, strength]) => total + strength * Math.exp(-Math.pow((time - at) / .18, 2)), 0); renderSpectrum((column, row) => { const distance = Math.hypot(column - 6.5, row - 4); const center = Math.max(0, 1 - distance / 8); const movement = (Math.sin(time * 12 + column * 1.21 + row * .73) + Math.cos(time * 7 - column * .54 + row)) * .09; const eventTexture = eventPulse * (.35 + center * .75 + ((column + row) % 3) * .08); return .2 + center * .16 + movement + eventTexture; }); visualFrame = requestAnimationFrame(draw); };
+  draw();
+}
+function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisual.dataset.live; soundVisual.style.removeProperty('--peak'); visualBars.forEach(bar => { bar.style.removeProperty('--elevation'); bar.style.removeProperty('--hue'); bar.style.removeProperty('--light'); bar.style.removeProperty('--glow'); }); }
 function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; stopVisualizer(); }
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
@@ -45,7 +71,7 @@ function beginRound(type) {
   if (isSong) {
     muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = 1;
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
-    songAudio.play().catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
+    songAudio.play().then(startLifeNoiseVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
   updateTimer();
 }
