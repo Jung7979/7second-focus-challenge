@@ -30,7 +30,7 @@ function render() {
     if (isPlaced(piece)) {
       element.classList.add('placed'); element.style.position = 'absolute'; element.style.width = `${piece.w / COLS * 100}%`; element.style.height = `${piece.h / ROWS * 100}%`;
       element.style.left = `${position.x / COLS * 100}%`; element.style.top = `${position.y / ROWS * 100}%`; board.append(element);
-    } else { element.style.gridColumn = `span ${Math.min(piece.w, 3)}`; if (piece.h > 1) element.style.minHeight = '48px'; tray.append(element); }
+    } else { element.style.width = `${piece.w * 48}px`; element.style.height = `${piece.h * 48}px`; tray.append(element); }
   });
   const packed = pieces.filter(isPlaced).length; pieceCount.textContent = `${packed} / ${pieces.length}`;
 }
@@ -50,9 +50,9 @@ function canPlace(piece, x, y) {
 }
 function beginDrag(event) {
   if (!playing) return;
-  event.preventDefault(); const id = event.currentTarget.dataset.id, piece = pieces.find(item => item.id === id), previous = { ...state[id] }, rect = event.currentTarget.getBoundingClientRect();
-  state[id] = { x: null, y: null }; dragging = { piece, previous, element: event.currentTarget, offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top };
-  document.body.append(dragging.element); dragging.element.classList.add('dragging'); dragging.element.style.width = `${rect.width}px`; dragging.element.style.height = `${rect.height}px`; moveDrag(event);
+  event.preventDefault(); const id = event.currentTarget.dataset.id, piece = pieces.find(item => item.id === id), previous = { ...state[id] }, boardRect = board.getBoundingClientRect(), dragWidth = boardRect.width / COLS * piece.w, dragHeight = boardRect.height / ROWS * piece.h;
+  state[id] = { x: null, y: null }; dragging = { piece, previous, element: event.currentTarget, offsetX: dragWidth / 2, offsetY: dragHeight / 2 };
+  document.body.append(dragging.element); dragging.element.classList.add('dragging'); dragging.element.style.width = `${dragWidth}px`; dragging.element.style.height = `${dragHeight}px`; moveDrag(event);
   document.addEventListener('pointermove', moveDrag); document.addEventListener('pointerup', endDrag, { once: true });
 }
 function moveDrag(event) { if (!dragging) return; dragging.element.style.left = `${event.clientX - dragging.offsetX}px`; dragging.element.style.top = `${event.clientY - dragging.offsetY}px`; }
