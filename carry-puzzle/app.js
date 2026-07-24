@@ -21,7 +21,7 @@ function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.
 function resetState() { state = Object.fromEntries(pieces.map(piece => [piece.id, { x: null, y: null }])); }
 function isPlaced(piece) { return state[piece.id].x !== null; }
 function applyProductImage(element, piece) {
-  element.style.backgroundColor = 'transparent';
+  element.style.backgroundColor = piece.color;
   element.style.backgroundImage = `url(assets/pieces-shaped/${piece.id}.png)`;
   element.style.backgroundSize = '100% 100%';
   element.style.backgroundPosition = 'center';
@@ -30,7 +30,15 @@ function applyProductImage(element, piece) {
   element.style.borderColor = 'transparent';
   element.style.boxShadow = 'none';
   element.style.filter = 'drop-shadow(0 4px 7px #183c6330)';
+  element.style.clipPath = piece.clip;
   element.style.setProperty('--piece-fill', piece.color);
+}
+function applyLabelBounds(element, piece) {
+  const bottom = Math.max(...piece.cells.map(([, y]) => y));
+  const bottomCells = piece.cells.filter(([, y]) => y === bottom).map(([x]) => x).sort((a, b) => a - b);
+  const start = bottomCells[0], span = bottomCells.length;
+  element.style.setProperty('--label-left', `${(start / piece.w) * 100}%`);
+  element.style.setProperty('--label-width', `${(span / piece.w) * 100}%`);
 }
 function puzzleOutline(piece) {
   const occupied = new Set(piece.cells.map(([x, y]) => `${x},${y}`));
@@ -46,7 +54,7 @@ function puzzleOutline(piece) {
 }
 function createPiece(piece) {
   const element = document.createElement('button');
-  element.type = 'button'; element.className = 'piece'; element.dataset.id = piece.id; applyProductImage(element, piece);
+  element.type = 'button'; element.className = 'piece'; element.dataset.id = piece.id; applyProductImage(element, piece); applyLabelBounds(element, piece);
   element.innerHTML = `${puzzleOutline(piece)}<span class="piece-label">${piece.name}</span>`;
   element.addEventListener('pointerdown', beginDrag); return element;
 }
@@ -78,7 +86,7 @@ function canPlace(piece, x, y) {
 function beginDrag(event) {
   if (!playing) return;
   event.preventDefault(); const id = event.currentTarget.dataset.id, piece = pieces.find(item => item.id === id), previous = { ...state[id] }, preview = document.createElement('div');
-  state[id] = { x: null, y: null }; preview.className = 'drop-preview'; applyProductImage(preview, piece); preview.innerHTML = `${puzzleOutline(piece)}<span class="piece-label">${piece.name}</span>`; board.append(preview);
+  state[id] = { x: null, y: null }; preview.className = 'drop-preview'; applyProductImage(preview, piece); applyLabelBounds(preview, piece); preview.innerHTML = `${puzzleOutline(piece)}<span class="piece-label">${piece.name}</span>`; board.append(preview);
   dragging = { piece, previous, source: event.currentTarget, preview }; dragging.source.style.visibility = 'hidden'; moveDrag(event);
   document.addEventListener('pointermove', moveDrag); document.addEventListener('pointerup', endDrag, { once: true });
 }
