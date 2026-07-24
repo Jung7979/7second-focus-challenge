@@ -23,8 +23,9 @@ function createNoise(type) {
   const source = audioContext.createBufferSource(), textureGain = audioContext.createGain(), gain = audioContext.createGain(), analyser = audioContext.createAnalyser(), lfo = audioContext.createOscillator(), lfoGain = audioContext.createGain();
   const volume = .045;
   analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
-  source.buffer = buffer; source.loop = true; textureGain.gain.value = type === 'wave' ? .62 : .55; lfo.frequency.value = type === 'wave' ? .34 : 1.35; lfoGain.gain.value = type === 'wave' ? .28 : .38;
-  gain.gain.value = muted ? 0 : volume; source.connect(textureGain).connect(analyser).connect(gain).connect(audioContext.destination); lfo.connect(lfoGain).connect(textureGain.gain); source.start(); lfo.start(); return { source, gain, analyser, lfo, volume, type };
+  const lfoFrequency = type === 'wave' ? .72 : 1.85;
+  source.buffer = buffer; source.loop = true; textureGain.gain.value = type === 'wave' ? .62 : .55; lfo.frequency.value = lfoFrequency; lfoGain.gain.value = type === 'wave' ? .28 : .38;
+  gain.gain.value = muted ? 0 : volume; source.connect(textureGain).connect(analyser).connect(gain).connect(audioContext.destination); lfo.connect(lfoGain).connect(textureGain.gain); source.start(); lfo.start(); return { source, gain, analyser, lfo, volume, type, lfoFrequency, startedAt: audioContext.currentTime };
 }
 function paintPolygon(points, fill, stroke) {
   spectrumContext.beginPath(); spectrumContext.moveTo(...points[0]); points.slice(1).forEach(point => spectrumContext.lineTo(...point)); spectrumContext.closePath();
@@ -39,7 +40,7 @@ function renderSpectrum(levelAt) {
   const isLifeNoise = soundVisual.dataset.mode === 'music';
   const backdrop = spectrumContext.createRadialGradient(width * .5, height * .37, 8, width * .5, height * .45, width * .72);
   backdrop.addColorStop(0, isLifeNoise ? '#5d163f' : '#0b5177'); backdrop.addColorStop(.48, isLifeNoise ? '#190c31' : '#092640'); backdrop.addColorStop(1, '#040914'); spectrumContext.fillStyle = backdrop; spectrumContext.fillRect(0, 0, width, height);
-  const tileWidth = width / (spectrumColumns + 1.5), tileHeight = tileWidth * .38, centerX = width * .5, baseY = height * .82;
+  const tileWidth = width / (spectrumColumns + 1.5), tileHeight = tileWidth * .38, centerX = width * .5, baseY = height * .89;
   const project = (x, y, z = 0) => [centerX + (x - y) * tileWidth * .5, baseY - (x + y) * tileHeight * .5 - z];
   const cells = [];
   for (let row = 0; row < spectrumRows; row++) for (let column = 0; column < spectrumColumns; column++) {
@@ -48,7 +49,7 @@ function renderSpectrum(levelAt) {
     cells.push({ column, row, level: spectrumLevels[index] });
   }
   cells.sort((a, b) => b.column + b.row - (a.column + a.row)).forEach(({ column, row, level }) => {
-    const elevation = 5 + Math.pow(level, 1.85) * height * .31;
+    const elevation = 3 + Math.pow(level, 2.1) * height * .18;
     const base = [project(column, row), project(column + 1, row), project(column + 1, row + 1), project(column, row + 1)];
     const top = [project(column, row, elevation), project(column + 1, row, elevation), project(column + 1, row + 1, elevation), project(column, row + 1, elevation)];
     const hue = 214 - level * 166, light = 29 + level * 39;
@@ -63,7 +64,7 @@ function renderSpectrum(levelAt) {
 }
 function startVisualizer(analyser) {
   activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); visualTimeData = new Uint8Array(analyser.fftSize); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
-  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length); const isWave = noiseSource?.type === 'wave'; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const phase = isWave ? now * 5.2 + column * .86 - row * 1.12 : now * 12.8 + column * 1.48 + row * .74; const travel = Math.pow((Math.sin(phase) + 1) / 2, isWave ? 1.5 : 3); const bandShape = isWave ? Math.max(0, 1 - Math.abs(column - row * 1.08 - 4) / 8) : ((column * 7 + row * 11) % 5) / 5; const reactive = Math.pow(audioLevel, .72) * .36 + rms * .7; return .035 + reactive + travel * (.08 + bandShape * .29) + (isWave ? Math.sin(now * 1.7) * .06 : Math.sin(now * 4.6 + row) * .09); }); visualFrame = requestAnimationFrame(draw); };
+  const draw = () => { activeAnalyser.getByteFrequencyData(visualData); activeAnalyser.getByteTimeDomainData(visualTimeData); const now = performance.now() / 1000, rms = Math.sqrt(visualTimeData.reduce((sum, value) => sum + Math.pow((value - 128) / 128, 2), 0) / visualTimeData.length); const isWave = noiseSource?.type === 'wave', modulationTime = (audioContext.currentTime - noiseSource.startedAt) * noiseSource.lfoFrequency, modulation = (Math.sin(modulationTime * Math.PI * 2 - Math.PI / 2) + 1) / 2; renderSpectrum((column, row) => { const bin = Math.min(visualData.length - 1, 1 + Math.floor(column * (visualData.length - 2) / spectrumColumns)); const audioLevel = visualData[bin] / 255; const phase = isWave ? now * 5.2 + column * .86 - row * 1.12 : now * 12.8 + column * 1.48 + row * .74; const travel = Math.pow((Math.sin(phase) + 1) / 2, isWave ? 1.5 : 3); const bandShape = isWave ? Math.max(0, 1 - Math.abs(column - row * 1.08 - 4) / 8) : ((column * 7 + row * 11) % 5) / 5; const reactive = Math.pow(audioLevel, .72) * .25 + rms * .4; const boostedMotion = modulation * (.22 + bandShape * .3); return .025 + reactive + boostedMotion + travel * (.07 + bandShape * .23) + (isWave ? Math.sin(now * 1.7) * .05 : Math.sin(now * 4.6 + row) * .08); }); visualFrame = requestAnimationFrame(draw); };
   draw();
 }
 function startLifeNoiseVisualizer() {
