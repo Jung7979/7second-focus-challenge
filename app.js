@@ -3,7 +3,7 @@ const soundNames = { rain: '빗소리', wave: '파도 소리' };
 const songAudio = document.querySelector('#song-audio');
 const soundVisual = document.querySelector('#sound-visual');
 const visualBars = [...soundVisual.querySelectorAll('i')];
-let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, songSource, songGain, songAnalyser, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, comparisonStarted = false;
+let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, comparisonStarted = false;
 const records = { song: null, noise: null };
 
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
@@ -20,11 +20,6 @@ function createNoise(type) {
   const volume = .045;
   analyser.fftSize = 64; analyser.smoothingTimeConstant = .72;
   source.buffer = buffer; source.loop = true; gain.gain.value = muted ? 0 : volume; source.connect(analyser).connect(gain).connect(audioContext.destination); source.start(); return { source, gain, analyser, volume };
-}
-function getSongAnalyser() {
-  audioContext ??= new AudioContext();
-  if (!songSource) { songSource = audioContext.createMediaElementSource(songAudio); songGain = audioContext.createGain(); songAnalyser = audioContext.createAnalyser(); songAnalyser.fftSize = 64; songAnalyser.smoothingTimeConstant = .72; songSource.connect(songGain).connect(songAnalyser).connect(audioContext.destination); }
-  return songAnalyser;
 }
 function startVisualizer(analyser) {
   activeAnalyser = analyser; visualData = new Uint8Array(analyser.frequencyBinCount); soundVisual.dataset.live = 'true'; cancelAnimationFrame(visualFrame);
@@ -47,9 +42,9 @@ function beginRound(type) {
   document.querySelector('#play-hint').textContent = isSong ? '노래가 들리는 동안 시간 감각에만 집중해 보세요.' : `${soundNames[selectedSound]}와 함께 같은 방식으로 7초를 맞혀 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
   if (isSong) {
-    const analyser = getSongAnalyser(); muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = 1; songGain.gain.value = 1; audioContext.resume();
+    muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = 1;
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
-    songAudio.play().catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; }); startVisualizer(analyser);
+    songAudio.play().catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
   } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
   updateTimer();
 }
@@ -79,5 +74,5 @@ document.querySelectorAll('.sound-card').forEach(card => card.addEventListener('
 document.querySelector('#song-round-button').addEventListener('click', () => beginRound('song'));
 document.querySelector('#noise-round-button').addEventListener('click', () => beginRound('noise'));
 document.querySelector('#stop-button').addEventListener('click', recordRound);
-document.querySelector('#mute-button').addEventListener('click', event => { muted = !muted; if (noiseSource) noiseSource.gain.gain.value = muted ? 0 : noiseSource.volume; if (songGain) songGain.gain.value = muted ? 0 : 1; event.currentTarget.textContent = muted ? '♬ 소리 켜기' : '♬ 소리 끄기'; event.currentTarget.setAttribute('aria-pressed', muted); });
+document.querySelector('#mute-button').addEventListener('click', event => { muted = !muted; if (noiseSource) noiseSource.gain.gain.value = muted ? 0 : noiseSource.volume; songAudio.muted = muted; event.currentTarget.textContent = muted ? '♬ 소리 켜기' : '♬ 소리 끄기'; event.currentTarget.setAttribute('aria-pressed', muted); });
 document.querySelector('#retry-button').addEventListener('click', () => { stopTimer(); stopSound(); records.song = records.noise = null; comparisonStarted = false; show('intro'); });
