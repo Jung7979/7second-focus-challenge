@@ -128,9 +128,9 @@ function updateTimer() {
 }
 function beginRound(type) {
   round = type; document.querySelector('#timer-readout').classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = '7.00초';
-  const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 생활소음 모드' : `ROUND 2 OF 2 · 생활소음 + ${soundNames[selectedSound]}`;
+  const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 층간 생활소음 환경' : `ROUND 2 OF 2 · 생활소음 + ${soundNames[selectedSound]}`;
   document.querySelector('#sound-visual').dataset.mode = isSong ? 'music' : 'noise';
-  document.querySelector('#play-hint').textContent = isSong ? '생활소음이 들리는 동안 시간 감각에만 집중해 보세요.' : `생활소음에 ${soundNames[selectedSound]}를 5dB 낮춰 섞은 환경에서 7초를 맞혀 보세요.`;
+  document.querySelector('#play-hint').textContent = isSong ? '생활소음이 들리는 동안, 내 공간의 소리 환경을 가볍게 느껴보세요.' : `생활소음에 ${soundNames[selectedSound]}를 더한 배경 사운드 환경을 체험해 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
   if (isSong) {
     muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = playbackMasterGain;
@@ -158,9 +158,9 @@ function renderResults() {
   document.querySelector('#noise-record').textContent = formatRecord(records.noise); document.querySelector('#noise-difference').textContent = formatDifference(records.noise); document.querySelector('#noise-card-label').textContent = `2차 · 생활소음 + ${soundNames[selectedSound]}`;
   const gap = Math.abs(records.noise.difference - records.song.difference);
   let comparisonCopy;
-  if (gap <= .1) comparisonCopy = '두 소리에서 비슷한 기록이 나왔어요. 이 게임은 집중력을 평가하지 않는 짧은 시간 감각 체험입니다. 오늘 내게 편한 소리를 찾아보세요.';
-  else if (records.song.difference < records.noise.difference) comparisonCopy = '이번 라운드에서는 생활소음 모드에서 7초에 더 가깝게 멈췄어요. 한 번의 기록은 집중력의 우열을 뜻하지 않아요. 생활소음과 백색소음 중 오늘 더 편한 환경을 찾아보세요.';
-  else comparisonCopy = `이번 라운드에서는 생활소음과 ${soundNames[selectedSound]}를 섞은 환경에서 7초에 더 가깝게 멈췄어요. 한 번의 기록은 집중력의 우열을 뜻하지 않아요. 오늘 내게 편한 소리 환경을 찾아보세요.`;
+  if (gap <= .1) comparisonCopy = '두 환경에서 비슷한 기록이 나왔어요. 이 체험은 집중력을 평가하는 테스트가 아니라, 층간 생활소음이 신경 쓰일 때 내게 편한 배경 사운드를 찾아보는 짧은 사운드 체크입니다.';
+  else if (records.song.difference < records.noise.difference) comparisonCopy = '이번에는 생활소음 환경에서 7초에 더 가깝게 멈췄어요. 한 번의 기록만으로 편안함을 단정할 수는 없어요. 상세페이지에서 빗소리·파도 소리 등 내 공간에 맞는 백색소음기 사운드를 확인해 보세요.';
+  else comparisonCopy = `이번에는 생활소음에 ${soundNames[selectedSound]}를 더한 환경에서 7초에 더 가깝게 멈췄어요. 한 번의 기록만으로 편안함을 단정할 수는 없어요. 상세페이지에서 내 공간에 맞는 백색소음기 사운드를 확인해 보세요.`;
   document.querySelector('#comparison-copy').textContent = comparisonCopy;
   show('result');
 }
