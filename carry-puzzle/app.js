@@ -119,7 +119,7 @@ function formatTime(seconds) { return `${Math.floor(seconds / 60)}:${String(seco
 function startGame() { clearInterval(timerId); resetState(); render(); playing = true; startedAt = performance.now(); timerValue.textContent = formatTime(GAME_SECONDS); hint.textContent = '조각을 길게 눌러 드래그하면 칸에 맞춰 놓을 수 있어요.'; document.querySelector('#answer-button').textContent = '💡 모범 답안 보기'; show('game'); timerId = setInterval(updateTimer, 100); }
 function showAnswer() {
   clearInterval(timerId); playing = false;
-  state = Object.fromEntries(pieces.map(piece => ({ [piece.id]: { x: ANSWER[piece.id][0], y: ANSWER[piece.id][1] } })));
+  state = Object.fromEntries(pieces.map(piece => [piece.id, { x: ANSWER[piece.id][0], y: ANSWER[piece.id][1] }]));
   render(); hint.textContent = '모범 답안입니다. 아래 “처음부터 다시 담기”를 누르면 다시 도전할 수 있어요.';
   document.querySelector('#answer-button').textContent = '모범 답안 표시됨';
 }
