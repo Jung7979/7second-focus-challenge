@@ -11,6 +11,7 @@
   <body>
     <main class="game-shell" aria-live="polite">
       <header class="brand"><span class="brand-dot"></span><span>소리쉼표</span></header>
+      <audio id="song-audio" class="game-audio" preload="auto"><source src="assets/binggeul-dora.mp3" type="audio/mpeg" /></audio>
 
       <section id="intro-screen" class="screen active" aria-labelledby="intro-title">
         <p class="eyebrow">SOUND COMPARISON CHALLENGE</p>
@@ -28,7 +29,7 @@
         <p class="eyebrow">ROUND 1 OF 2 · 음악 모드</p>
         <h2 id="song-setup-title">노래를 재생한 뒤<br />7초 챌린지를 시작하세요.</h2>
         <p class="lede compact">1차 시작 버튼을 누르면 제공한 노래가 재생됩니다. 음악이 계속되는 동안 7초라고 느끼는 순간 멈추기를 누르세요.</p>
-        <div class="audio-card"><span>음악 모드 · 빙글 돌아</span><audio id="song-audio" controls preload="metadata"><source src="assets/binggeul-dora.mp3" type="audio/mpeg" />이 브라우저에서는 오디오 재생을 지원하지 않습니다.</audio></div>
+        <div class="audio-card"><span>음악 모드 · 빙글 돌아</span><small>1차 시작과 함께 자동 재생됩니다.</small></div>
         <button id="song-round-button" class="button primary">노래와 함께 1차 시작 <span>→</span></button>
       </section>
 

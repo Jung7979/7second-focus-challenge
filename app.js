@@ -46,7 +46,11 @@ function beginRound(type) {
   document.querySelector('#sound-visual').dataset.mode = isSong ? 'music' : 'noise';
   document.querySelector('#play-hint').textContent = isSong ? '노래가 들리는 동안 시간 감각에만 집중해 보세요.' : `${soundNames[selectedSound]}와 함께 같은 방식으로 7초를 맞혀 보세요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
-  if (isSong) { const analyser = getSongAnalyser(); audioContext.resume(); songAudio.currentTime = 0; songGain.gain.value = muted ? 0 : 1; songAudio.play().catch(() => {}); startVisualizer(analyser); } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
+  if (isSong) {
+    const analyser = getSongAnalyser(); muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = 1; songGain.gain.value = 1; audioContext.resume();
+    document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
+    songAudio.play().catch(() => { document.querySelector('#play-hint').textContent = '음원을 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; }); startVisualizer(analyser);
+  } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
   updateTimer();
 }
 function recordRound() {
