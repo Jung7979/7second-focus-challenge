@@ -15,7 +15,7 @@ const whiteNoiseMixGain = Math.pow(10, -5 / 20);
 const playbackMasterGain = Math.pow(10, -5 / 20);
 const lifeNoiseGain = Math.pow(10, 3 / 20);
 const mixedLifeNoiseGain = Math.pow(10, -1 / 20);
-let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false;
+let selectedSound = 'rain', round = 'song', startedAt = 0, audioContext, noiseSource, muted = false, timerFrame, visualFrame, activeAnalyser, visualData, visualTimeData, comparisonStarted = false, comfortChoice = null;
 const records = { song: null, noise: null };
 
 function show(name) { Object.entries(screens).forEach(([key, screen]) => screen.classList.toggle('active', key === name)); }
@@ -131,16 +131,18 @@ function stopVisualizer() { cancelAnimationFrame(visualFrame); delete soundVisua
 function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource.layers.forEach(layer => layer.lfo.stop()); noiseSource = null; } songAudio.pause(); songAudio.currentTime = 0; rainAudio.pause(); rainAudio.currentTime = 0; waveAudio.pause(); waveAudio.currentTime = 0; stopVisualizer(); }
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
-  const remaining = 7 - (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
-  if (remaining <= 3) timer.classList.add('is-hidden');
-  else { timer.classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = `${remaining.toFixed(2)}초`; }
+  const elapsed = (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
+  // Keep the existing blind-zone: the readout disappears once 4 seconds have passed,
+  // leaving the final three seconds to the user's sense of time.
+  if (elapsed >= 4) timer.classList.add('is-hidden');
+  else { timer.classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = `${elapsed.toFixed(2)}초`; }
   timerFrame = requestAnimationFrame(updateTimer);
 }
 function beginRound(type) {
-  round = type; document.querySelector('#timer-readout').classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = '7.00초';
-  const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 층간 생활소음 환경' : `ROUND 2 OF 2 · 생활소음 + ${soundNames[selectedSound]}`;
+  round = type; document.querySelector('#timer-readout').classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = '0.00초';
+  const isSong = type === 'song'; document.querySelector('#round-label').textContent = isSong ? 'ROUND 1 OF 2 · 소리쉼표 OFF' : `ROUND 2 OF 2 · 소리쉼표 ON · ${soundNames[selectedSound]}`;
   document.querySelector('#sound-visual').dataset.mode = isSong ? 'music' : 'noise';
-  document.querySelector('#play-hint').textContent = isSong ? '생활소음이 들리는 동안, 내 공간의 소리 환경을 가볍게 느껴보세요.' : `생활소음에 ${soundNames[selectedSound]}를 더한 배경 사운드 환경을 체험해 보세요.`;
+  document.querySelector('#play-hint').textContent = isSong ? '소리쉼표 OFF · 윗집 생활소음 그대로 느껴보세요.' : `소리쉼표 ON · 생활소음에 ${soundNames[selectedSound]}를 더한 환경이에요.`;
   document.querySelector('#mute-button').classList.remove('hidden'); show('play'); startedAt = performance.now(); audioContext?.resume();
   if (isSong) {
     muted = false; songAudio.currentTime = 0; songAudio.muted = false; songAudio.volume = playbackMasterGain * lifeNoiseGain;
@@ -163,19 +165,27 @@ function beginRound(type) {
 }
 function recordRound() {
   const elapsed = (performance.now() - startedAt) / 1000; records[round] = { elapsed, difference: Math.abs(elapsed - 7) }; stopTimer(); stopSound();
-  if (round === 'song') { document.querySelector('#selected-sound-name').textContent = soundNames[selectedSound]; show('noise-setup'); } else renderResults();
+  if (round === 'song') {
+    document.querySelector('#selected-sound-name').textContent = soundNames[selectedSound];
+    show('noise-setup');
+  } else {
+    document.querySelector('#preference-sound-name').textContent = soundNames[selectedSound];
+    show('preference');
+  }
 }
 function formatRecord(record) { return `${record.elapsed.toFixed(2)}초`; }
 function formatDifference(record) { return `7초와 ${record.difference.toFixed(2)}초 차이`; }
-function renderResults() {
+function renderResults(choice) {
+  comfortChoice = choice;
   document.querySelector('#song-record').textContent = formatRecord(records.song); document.querySelector('#song-difference').textContent = formatDifference(records.song);
-  document.querySelector('#noise-record').textContent = formatRecord(records.noise); document.querySelector('#noise-difference').textContent = formatDifference(records.noise); document.querySelector('#noise-card-label').textContent = `2차 · 생활소음 + ${soundNames[selectedSound]}`;
-  const gap = Math.abs(records.noise.difference - records.song.difference);
+  document.querySelector('#noise-record').textContent = formatRecord(records.noise); document.querySelector('#noise-difference').textContent = formatDifference(records.noise); document.querySelector('#noise-card-label').textContent = `2차 · 소리쉼표 ON · ${soundNames[selectedSound]}`;
   let comparisonCopy;
-  if (gap <= .1) comparisonCopy = '두 환경에서 비슷한 기록이 나왔어요. 이 체험은 집중력을 평가하는 테스트가 아니라, 층간 생활소음이 신경 쓰일 때 내게 편한 배경 사운드를 찾아보는 짧은 사운드 체크입니다.';
-  else if (records.song.difference < records.noise.difference) comparisonCopy = '이번에는 생활소음 환경에서 7초에 더 가깝게 멈췄어요. 한 번의 기록만으로 편안함을 단정할 수는 없어요. 상세페이지에서 빗소리·파도 소리 등 내 공간에 맞는 백색소음기 사운드를 확인해 보세요.';
-  else comparisonCopy = `이번에는 생활소음에 ${soundNames[selectedSound]}를 더한 환경에서 7초에 더 가깝게 멈췄어요. 한 번의 기록만으로 편안함을 단정할 수는 없어요. 상세페이지에서 내 공간에 맞는 백색소음기 사운드를 확인해 보세요.`;
+  if (choice === 'masked') comparisonCopy = `오늘은 소리쉼표 ON으로 ${soundNames[selectedSound]}를 더한 환경이 더 편하게 느껴졌어요. 7초 기록은 재미용 점수이고, 이 결과는 직접 고른 오늘의 사운드 취향이에요.`;
+  else if (choice === 'plain') comparisonCopy = '오늘은 생활소음 그대로인 소리쉼표 OFF 환경이 더 편하게 느껴졌어요. 소리 취향은 사람마다 달라요. 다른 사운드도 비교하며 내 공간에 맞는 소리를 찾아보세요.';
+  else comparisonCopy = '오늘은 소리쉼표 OFF와 ON 환경이 비슷하게 느껴졌어요. 한 번의 체험으로 정답을 정할 필요는 없어요. 다른 사운드도 들어보며 내 공간에 맞는 소리를 찾아보세요.';
   document.querySelector('#comparison-copy').textContent = comparisonCopy;
+  document.querySelector('.compare-card.music').classList.toggle('preferred', choice === 'plain');
+  document.querySelector('.compare-card.noise').classList.toggle('preferred', choice === 'masked');
   show('result');
 }
 document.querySelectorAll('.sound-card').forEach(card => card.addEventListener('click', () => {
@@ -188,4 +198,16 @@ document.querySelector('#song-round-button').addEventListener('click', () => beg
 document.querySelector('#noise-round-button').addEventListener('click', () => beginRound('noise'));
 document.querySelector('#stop-button').addEventListener('click', recordRound);
 document.querySelector('#mute-button').addEventListener('click', event => { muted = !muted; if (noiseSource) noiseSource.gain.gain.value = muted ? 0 : noiseSource.volume; songAudio.muted = muted; rainAudio.muted = muted; waveAudio.muted = muted; event.currentTarget.textContent = muted ? '♬ 소리 켜기' : '♬ 소리 끄기'; event.currentTarget.setAttribute('aria-pressed', muted); });
-document.querySelector('#retry-button').addEventListener('click', () => { stopTimer(); stopSound(); records.song = records.noise = null; comparisonStarted = false; show('intro'); });
+document.querySelectorAll('.preference-button').forEach(button => button.addEventListener('click', () => renderResults(button.dataset.choice)));
+const comingSoonDialog = document.querySelector('#coming-soon-dialog');
+function closeComingSoonDialog() {
+  if (typeof comingSoonDialog.close === 'function') comingSoonDialog.close();
+  else comingSoonDialog.removeAttribute('open');
+}
+document.querySelector('#product-link').addEventListener('click', () => {
+  if (typeof comingSoonDialog.showModal === 'function') comingSoonDialog.showModal();
+  else comingSoonDialog.setAttribute('open', '');
+});
+document.querySelector('#coming-soon-close').addEventListener('click', closeComingSoonDialog);
+comingSoonDialog.addEventListener('click', event => { if (event.target === comingSoonDialog) closeComingSoonDialog(); });
+document.querySelector('#retry-button').addEventListener('click', () => { stopTimer(); stopSound(); records.song = records.noise = null; comfortChoice = null; comparisonStarted = false; show('intro'); });
