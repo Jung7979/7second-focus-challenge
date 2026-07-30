@@ -132,9 +132,9 @@ function stopSound() { if (noiseSource) { noiseSource.source.stop(); noiseSource
 function stopTimer() { cancelAnimationFrame(timerFrame); }
 function updateTimer() {
   const elapsed = (performance.now() - startedAt) / 1000, timer = document.querySelector('#timer-readout');
-  // Keep the existing blind-zone: the readout disappears once 4 seconds have passed,
-  // leaving the final three seconds to the user's sense of time.
-  if (elapsed >= 4) timer.classList.add('is-hidden');
+  // Show enough progress for first-time players, then leave the final two seconds
+  // to the user's sense of time.
+  if (elapsed >= 5) timer.classList.add('is-hidden');
   else { timer.classList.remove('is-hidden'); document.querySelector('#timer-value').textContent = `${elapsed.toFixed(2)}초`; }
   timerFrame = requestAnimationFrame(updateTimer);
 }
@@ -162,9 +162,11 @@ function beginRound(type) {
 function recordRound() {
   const elapsed = (performance.now() - startedAt) / 1000; records[round] = { elapsed, difference: Math.abs(elapsed - 7) }; stopTimer(); stopSound();
   if (round === 'song') {
+    document.querySelector('#first-round-record').textContent = formatRecord(records.song);
     document.querySelector('#selected-sound-name').textContent = soundNames[selectedSound];
     show('noise-setup');
   } else {
+    document.querySelector('#second-round-record').textContent = formatRecord(records.noise);
     document.querySelector('#preference-sound-name').textContent = soundNames[selectedSound];
     show('preference');
   }
