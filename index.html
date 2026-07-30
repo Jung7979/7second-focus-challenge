@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#132544" />
     <meta name="description" content="층간 생활소음이 신경 쓰일 때, 나에게 편한 마스킹 사운드를 가볍게 비교해 보는 백색소음기 체험입니다." />
     <title>층간소음 사운드 체크 | 백색소음기 체험</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=20260730-feedback-flow-1" />
   </head>
   <body>
     <main class="game-shell" aria-live="polite">
@@ -21,13 +21,13 @@
       <section id="intro-screen" class="screen active" aria-labelledby="intro-title">
         <p class="eyebrow">FLOOR-NOISE SOUND CHECK</p>
         <h1 id="intro-title">층간 생활소음이 신경 쓰일 때,<br /><strong>내게 편한 배경 소리를 찾아보세요.</strong></h1>
-        <p class="lede">소리쉼표 OFF로 생활소음 그대로 7초, ON으로 선택한 배경 소리와 함께 7초를 비교해요. 약 20초 동안 내게 더 편한 소리 환경을 확인해 보세요.</p>
+        <p class="lede">소리를 고르고 두 번의 7초에 도전하세요. 생활소음 그대로인 환경과 백색소음을 더한 환경을 비교합니다.</p>
         <aside class="how-to-play" aria-label="게임 방법">
           <strong>게임 방법 · 약 20초</strong>
           <ol>
-            <li><b>1</b><span>원하는 배경 소리를 고르면 <em>1차가 바로 시작</em>돼요.</span></li>
-            <li><b>2</b><span>소리쉼표 <em>OFF와 ON</em>에서 각각 7초라고 느껴질 때 <em>멈추기</em>를 눌러요.</span></li>
-            <li><b>3</b><span>두 기록을 비교하고 내 공간에 맞는 소리와 혜택을 확인해요.</span></li>
+            <li><b>1</b><span>배경 소리를 고르면 <em>1차가 바로 시작</em>돼요.</span></li>
+            <li><b>2</b><span>숫자는 5초까지 보여요. <em>7초라고 느껴질 때 멈추기</em>를 눌러요.</span></li>
+            <li><b>3</b><span>다른 환경에서 <em>한 번 더 도전</em>한 뒤 두 기록을 비교해요.</span></li>
           </ol>
         </aside>
         <fieldset class="sound-picker">
@@ -60,14 +60,24 @@
       </section>
 
       <section id="noise-setup-screen" class="screen" aria-labelledby="noise-setup-title">
-        <p class="eyebrow">ROUND 2 OF 2 · 소리쉼표 ON</p>
-        <h2 id="noise-setup-title">소리쉼표 ON으로 <span id="selected-sound-name">빗소리(백색소음)</span>를 더한<br />환경도 체험해 볼까요?</h2>
-        <p class="lede compact">선택한 사운드는 생활소음과 함께 낮은 볼륨으로 재생됩니다. 같은 방식으로 체험한 뒤, 내게 더 편한 사운드를 확인해 보세요.</p>
-        <button id="noise-round-button" class="button primary setup-button">선택한 사운드 체험 시작 <span>→</span></button>
+        <p class="eyebrow">ROUND 1 COMPLETE</p>
+        <h2 id="noise-setup-title">1차 기록을 확인했어요.</h2>
+        <div class="round-result-card" aria-label="1차 기록">
+          <span>생활소음 환경 기록</span>
+          <strong id="first-round-record">-</strong>
+          <small>기록이 저장됐어요. 한 번 더 하면 두 환경을 비교할 수 있어요.</small>
+        </div>
+        <p class="lede compact">이번에는 생활소음에 <strong id="selected-sound-name">빗소리(백색소음)</strong>를 더해 같은 방식으로 진행합니다.</p>
+        <button id="noise-round-button" class="button primary setup-button">다른 소리 환경에서 한 번 더 해보기 <span>→</span></button>
       </section>
 
       <section id="preference-screen" class="screen preference-screen" aria-labelledby="preference-title">
         <p class="eyebrow">LISTENING COMPLETE</p>
+        <div class="round-result-card compact-result" aria-label="2차 기록">
+          <span>백색소음 환경 기록</span>
+          <strong id="second-round-record">-</strong>
+          <small>두 번의 7초 도전이 끝났어요.</small>
+        </div>
         <h2 id="preference-title">어느 환경에서 생활소음이<br />덜 신경 쓰였나요?</h2>
         <p class="lede compact">7초 기록은 재미를 위한 게임 점수예요. 편안함은 기록과 관계없이 직접 느낀 쪽을 선택해 주세요.</p>
         <div class="preference-options" role="group" aria-label="더 편하게 느껴진 소리 환경 선택">
@@ -111,6 +121,6 @@
       </div>
     </dialog>
 
-    <script src="app.js?v=20260724-mixed-life-noise-minus-1db-1"></script>
+    <script src="app.js?v=20260730-feedback-flow-1"></script>
   </body>
 </html>
