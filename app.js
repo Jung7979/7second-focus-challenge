@@ -1,5 +1,5 @@
 const screens = Object.fromEntries([...document.querySelectorAll('.screen')].map(screen => [screen.id.replace('-screen', ''), screen]));
-const soundNames = { rain: '빗소리', wave: '파도 소리', mask: '생활소음 마스킹 노이즈' };
+const soundNames = { rain: '빗소리(백색소음)', wave: '파도소리(백색소음)' };
 const songAudio = document.querySelector('#song-audio');
 const rainAudio = document.querySelector('#rain-audio');
 const waveAudio = document.querySelector('#wave-audio');
@@ -156,10 +156,6 @@ function beginRound(type) {
     muted = false; waveAudio.currentTime = 0; waveAudio.muted = false; waveAudio.volume = .82 * whiteNoiseMixGain * playbackMasterGain; playLifeNoiseLayer(mixedLifeNoiseGain);
     document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
     waveAudio.play().then(startWaveVisualizer).catch(() => { document.querySelector('#play-hint').textContent = '파도 소리를 재생하지 못했어요. 새로고침 후 다시 시도해 주세요.'; });
-  } else if (selectedSound === 'mask') {
-    muted = false; noiseSource = createNoise('mask'); audioContext.resume(); playLifeNoiseLayer(mixedLifeNoiseGain);
-    document.querySelector('#mute-button').textContent = '♬ 소리 끄기'; document.querySelector('#mute-button').setAttribute('aria-pressed', 'false');
-    startVisualizer(noiseSource.analyser);
   } else { noiseSource = createNoise(selectedSound); audioContext.resume(); startVisualizer(noiseSource.analyser); }
   updateTimer();
 }
