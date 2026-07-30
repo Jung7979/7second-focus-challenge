@@ -21,7 +21,15 @@
       <section id="intro-screen" class="screen active" aria-labelledby="intro-title">
         <p class="eyebrow">FLOOR-NOISE SOUND CHECK</p>
         <h1 id="intro-title">층간 생활소음이 신경 쓰일 때,<br /><strong>내게 편한 배경 소리를 찾아보세요.</strong></h1>
-        <p class="lede">빗소리 또는 파도 소리를 고르면 생활소음 환경과 비교가 시작됩니다. 14초의 짧은 체험으로 휴식 시간에 어울리는 사운드를 확인해 보세요.</p>
+        <p class="lede">소리쉼표 OFF로 생활소음 그대로 7초, ON으로 선택한 배경 소리와 함께 7초를 비교해요. 약 20초 동안 내게 더 편한 소리 환경을 확인해 보세요.</p>
+        <aside class="how-to-play" aria-label="게임 방법">
+          <strong>게임 방법 · 약 20초</strong>
+          <ol>
+            <li><b>1</b><span>원하는 배경 소리를 고르면 <em>1차가 바로 시작</em>돼요.</span></li>
+            <li><b>2</b><span>소리쉼표 <em>OFF와 ON</em>에서 각각 7초라고 느껴질 때 <em>멈추기</em>를 눌러요.</span></li>
+            <li><b>3</b><span>두 기록을 비교하고 내 공간에 맞는 소리와 혜택을 확인해요.</span></li>
+          </ol>
+        </aside>
         <fieldset class="sound-picker">
           <legend class="sr-only">백색소음 선택</legend>
           <label class="sound-card selected"><input type="radio" name="sound" value="rain" checked /><span class="sound-icon">☂</span><span><b>빗소리</b><small>잠들기 전 고른 배경 사운드</small></span></label>
@@ -32,7 +40,7 @@
       </section>
 
       <section id="song-setup-screen" class="screen" aria-labelledby="song-setup-title">
-        <p class="eyebrow">ROUND 1 OF 2 · 층간 생활소음 환경</p>
+        <p class="eyebrow">ROUND 1 OF 2 · 소리쉼표 OFF</p>
         <h2 id="song-setup-title">먼저, 층간 생활소음이 들리는<br />내 공간을 가볍게 체험해 보세요.</h2>
         <p class="lede compact">1차에서는 윗집 생활소음이 재생됩니다. 7초라고 느끼는 순간 멈추기를 눌러, 다음 사운드 환경과 비교할 기준을 만들어 보세요.</p>
         <div class="audio-card"><span>기준 환경 · 윗집 층간 생활소음 MIX</span><small>1차 시작과 함께 자동 재생됩니다.</small></div>
@@ -40,36 +48,70 @@
       </section>
 
       <section id="play-screen" class="screen" aria-labelledby="play-title">
-        <p class="eyebrow" id="round-label">ROUND 1 OF 2</p>
+        <p class="eyebrow" id="round-label">ROUND 1 OF 2 · 소리쉼표 OFF</p>
         <h2 id="play-title">7초라고 느끼는 순간<br />버튼을 눌러주세요.</h2>
-        <div id="timer-readout" class="timer-readout" aria-label="남은 시간"><span>남은 시간</span><strong id="timer-value">7.00초</strong></div>
+        <div id="timer-readout" class="timer-readout" aria-label="경과 시간"><span>경과 시간</span><strong id="timer-value">0.00초</strong></div>
         <div id="sound-visual" class="spectrum-3d" data-mode="music" aria-hidden="true"><canvas class="spectrum-canvas"></canvas></div>
         <p id="play-hint" class="play-hint">생활소음이 들리는 동안, 내 공간의 소리 환경을 가볍게 느껴보세요.</p>
-        <button id="stop-button" class="button stop">멈추기</button>
+        <button id="stop-button" class="button stop" aria-label="7초라고 느껴질 때 게임 기록 멈추기">
+          <span class="stop-icon" aria-hidden="true">■</span>
+          <span><strong>지금 멈추기</strong><small>7초라고 느껴질 때 탭</small></span>
+        </button>
         <button id="mute-button" class="text-button hidden" aria-pressed="false">♬ 소리 끄기</button>
       </section>
 
       <section id="noise-setup-screen" class="screen" aria-labelledby="noise-setup-title">
-        <p class="eyebrow">ROUND 2 OF 2 · MASKING SOUND</p>
-        <h2 id="noise-setup-title">생활소음에 <span id="selected-sound-name">빗소리</span>를 더한<br />배경 사운드도 체험해 볼까요?</h2>
+        <p class="eyebrow">ROUND 2 OF 2 · 소리쉼표 ON</p>
+        <h2 id="noise-setup-title">소리쉼표 ON으로 <span id="selected-sound-name">빗소리</span>를 더한<br />환경도 체험해 볼까요?</h2>
         <p class="lede compact">선택한 사운드는 생활소음과 함께 낮은 볼륨으로 재생됩니다. 같은 방식으로 체험한 뒤, 내게 더 편한 사운드를 확인해 보세요.</p>
         <button id="noise-round-button" class="button primary setup-button">선택한 사운드 체험 시작 <span>→</span></button>
       </section>
 
+      <section id="preference-screen" class="screen preference-screen" aria-labelledby="preference-title">
+        <p class="eyebrow">LISTENING COMPLETE</p>
+        <h2 id="preference-title">어느 환경에서 생활소음이<br />덜 신경 쓰였나요?</h2>
+        <p class="lede compact">7초 기록은 재미를 위한 게임 점수예요. 편안함은 기록과 관계없이 직접 느낀 쪽을 선택해 주세요.</p>
+        <div class="preference-options" role="group" aria-label="더 편하게 느껴진 소리 환경 선택">
+          <button type="button" class="preference-button" data-choice="masked">
+            <span class="preference-mark" aria-hidden="true">ON</span>
+            <span><strong>소리쉼표 ON</strong><small>생활소음 + <span id="preference-sound-name">빗소리</span></small></span>
+          </button>
+          <button type="button" class="preference-button" data-choice="plain">
+            <span class="preference-mark" aria-hidden="true">OFF</span>
+            <span><strong>소리쉼표 OFF</strong><small>생활소음 그대로인 환경</small></span>
+          </button>
+          <button type="button" class="preference-button" data-choice="same">
+            <span class="preference-mark" aria-hidden="true">＝</span>
+            <span><strong>비슷하게 느껴졌어요</strong><small>두 환경의 차이가 크지 않았어요</small></span>
+          </button>
+        </div>
+        <p class="privacy-note">선택 내용은 저장하거나 전송하지 않아요.</p>
+      </section>
+
       <section id="result-screen" class="screen" aria-labelledby="result-title">
         <p class="eyebrow">MY MASKING SOUND CHECK</p>
-        <h2 id="result-title">내 공간에 어울리는<br />배경 사운드를 확인했어요.</h2>
+        <h2 id="result-title">오늘의 사운드 선택을<br />확인했어요.</h2>
         <div class="comparison-grid">
-          <div class="compare-card music"><span>1차 · 층간 생활소음 환경</span><strong id="song-record">-</strong><small id="song-difference">7초와 -초 차이</small></div>
-          <div class="compare-card noise"><span id="noise-card-label">2차 · 빗소리</span><strong id="noise-record">-</strong><small id="noise-difference">7초와 -초 차이</small></div>
+          <div class="compare-card music"><span>1차 · 소리쉼표 OFF</span><strong id="song-record">-</strong><small id="song-difference">7초와 -초 차이</small></div>
+          <div class="compare-card noise"><span id="noise-card-label">2차 · 소리쉼표 ON</span><strong id="noise-record">-</strong><small id="noise-difference">7초와 -초 차이</small></div>
         </div>
         <p id="comparison-copy" class="result-copy"></p>
         <div class="offer-card"><span class="offer-label">참여 완료 혜택</span><strong>층간소음으로 지친 공간을 위한<br />백색소음기 <em>3,000원</em> 할인</strong><p>수업용 예시 쿠폰 · 실제 발급·할인은 제공되지 않습니다.</p><details><summary>예시 쿠폰 사용 조건 보기</summary><ul><li>백색소음기 본품 20,000원 이상 구매 시</li><li>2026.08.01 ~ 2026.08.31</li><li>다른 쿠폰과 중복 사용 불가</li></ul></details></div>
-        <!-- 제출 전 href를 실제 판매 중인 내 상품 상세 URL로 교체하세요. -->
-        <a class="button primary product-link" href="https://search.shopping.naver.com/search/all?query=%EB%B0%B1%EC%83%89%EC%86%8C%EC%9D%8C%EA%B8%B0">층간소음용 백색소음기 상세 보기 <span>→</span></a>
+        <button id="product-link" type="button" class="button primary product-link" aria-haspopup="dialog" aria-controls="coming-soon-dialog">소리쉼표 상품 출시 안내 <span>→</span></button>
         <button id="retry-button" class="text-button">다른 배경 사운드로 다시 체험하기</button>
       </section>
     </main>
+
+    <dialog id="coming-soon-dialog" class="coming-soon-dialog" aria-labelledby="coming-soon-title">
+      <div class="coming-soon-card">
+        <span class="coming-soon-mark" aria-hidden="true">◌</span>
+        <p class="coming-soon-eyebrow">COMING SOON</p>
+        <h2 id="coming-soon-title">상품 상세페이지<br />커밍 순!</h2>
+        <p>소리쉼표 백색소음기 상품 페이지를 준비하고 있어요. 조금만 기다려 주세요.</p>
+        <button id="coming-soon-close" type="button" class="button primary">확인</button>
+      </div>
+    </dialog>
+
     <script src="app.js?v=20260724-mixed-life-noise-minus-1db-1"></script>
   </body>
 </html>
